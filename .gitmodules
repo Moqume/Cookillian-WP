@@ -1,0 +1,6 @@
+[submodule "vendor/pf4wp"]
+	path = vendor/pf4wp
+	url = git://github.com/Myatu/pf4wp.git
+[submodule "vendor/Twig"]
+	path = vendor/Twig
+	url = http://github.com/fabpot/Twig.git
