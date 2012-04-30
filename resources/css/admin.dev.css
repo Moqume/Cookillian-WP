@@ -1,0 +1,34 @@
+/*!
+ * Copyright (c) 2011-2012 Mike Green <myatus@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ */
+
+.multi_checkbox {
+    list-style: none;
+    height: 150px;
+    width: 350px;
+    overflow: auto;
+    border: 1px solid #bbb;
+    background-color: #fff;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+}
+
+.multi_checkbox label {
+    width: 100%;
+    display: block;
+}
+
+.multi_checkbox li {
+    padding: 3px;
+    margin: 0;
+}
+
+.multi_checkbox .highlighted,
+.multi_checkbox li:hover {
+    background-color: highlight;
+}

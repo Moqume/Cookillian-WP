@@ -1,0 +1,47 @@
+{#
+    Copyright (c) 2012 Mike Green <myatus@gmail.com>
+
+    For the full copyright and license information, please view the LICENSE
+    file that was distributed with this source code.
+#}
+
+<div style="position: relative; width: 100%;"> {# REL DIV #}
+    <form method="post" action="" id="settings_form">
+        {{ nonce | raw }}
+
+        <table class="form-table">
+            <tbody>
+                <tr valign="top">
+                    <th scope="row">
+                        {{ __('Countries') }}
+                    </th>
+                    <td>
+                        <ul class="multi_checkbox">
+                            {% for country_key,country_val in countries %}
+                            <li>
+                                <label>
+                                    <input type="checkbox" name="countries[]" value="{{ country_key }}" {% if country_val.selected %}checked="checked"{% endif %} />
+                                    {{ country_val.country }}
+                                </label>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        {{ submit_button | raw }}
+
+    </form>
+
+    <div id="my_footer">
+        <img src="{{ plugin_base_url }}resources/images/myatus_logo_white.png" alt="Myatu's"/><br>
+        <span>
+            <a href="{{ plugin_home }}" target="_blank">{{plugin_name }} {{ plugin_version }}</a> |
+            <a href="#" target="_blank">{{ __('Rate It') }}</a> |
+            <a href="#" target="_blank">{{ __('Forum') }}</a> |
+            <a href="http://pledgie.com/campaigns/16906" target="_blank">{{ __('Donate') }}</a>
+        </span>
+    </div>
+</div> {# REL DIV #}
