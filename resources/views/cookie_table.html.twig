@@ -1,0 +1,44 @@
+{#
+    Copyright (c) 2012 Mike Green <myatus@gmail.com>
+
+    For the full copyright and license information, please view the LICENSE
+    file that was distributed with this source code.
+#}
+
+{% set last_head = '' %}
+<table>
+    <thead>
+        <th scope="col">{{ __('Name') }}</th>
+        <th scope="col">{{ __('Description') }}</th>
+    </thead>
+    <tbody>
+        {% for cookie_name, cookie_value in cookies %}
+
+        {% if last_head != cookie_value.group %}
+            {% set last_head = cookie_value.group %}
+            <tr>
+                <td colspan="2">
+                    <h2>{{ cookie_value.group }}</h2>
+                </td>
+            </tr>
+
+        {% endif %}
+        <tr>
+            <td>
+                {{ cookie_name }}
+            </td>
+            <td>
+                <p>
+                    {{ cookie_value.desc }}
+                </p>
+
+                {% if cookie_value.required %}
+                <p>
+                    <strong>{{ required_text }}</strong>
+                </p>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

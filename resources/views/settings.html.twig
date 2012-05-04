@@ -1,0 +1,247 @@
+{#
+    Copyright (c) 2012 Mike Green <myatus@gmail.com>
+
+    For the full copyright and license information, please view the LICENSE
+    file that was distributed with this source code.
+#}
+
+<div style="position: relative; width: 100%;"> {# REL DIV #}
+    <form method="post" action="" id="settings_form">
+        {{ nonce | raw }}
+
+        <table class="form-table">
+            <tbody>
+                <tr>
+                    <th scope="row">
+                        {{ __('Auto-add Cookies') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="auto_add_cookies" {% if auto_add_cookies %}checked="checked"{% endif %} />
+                            {{ __('Automatically add new/unknown cookies to the Cookies list') }}
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('PHP Sessions') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="php_sessions_required" {% if php_sessions_required %}checked="checked"{% endif %} />
+                            {{ __('Do not destroy cookie-based PHP sessions') }}
+                            <span class="description">({{ __('Required by some plugins, such as WP e-Commerce') }})</span>
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Geolocation Service') }}
+                    </th>
+                    <td>
+                        {% for geo_service_name, geo_service_value in geo_services %}
+                        <label>
+                            <input type="radio" name="geo_service" value="{{ geo_service_name }}"{% if geo_service_value.checked %}checked="checked"{% endif %} />
+                            {{ geo_service_value.title }}
+                        </label>
+                        <span class="description">{{ geo_service_value.desc | raw }}</span>
+                        {% if not loop.last %}
+                        <br />
+                        {% endif %}
+                        {% endfor %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Countries') }}
+                    </th>
+                    <td>
+                        <p>{{ __('Only visitors from the following selected countries will have their cookies filtered, unless they have already opted in:') }}</p>
+                        <ul class="multi_checkbox">
+                            {% for country_key,country_val in countries %}
+                            <li>
+                                <label>
+                                    <input type="checkbox" name="countries[]" value="{{ country_key }}" {% if country_val.selected %}checked="checked"{% endif %} />
+                                    {{ country_val.country }}
+                                </label>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Alert Settings</h3>
+        <table class="form-table">
+            <tbody>
+                <tr>
+                    <th scope="row">
+                        {{ __('Show Alert') }}
+                    </th>
+                    <td>
+                        <p>{{ __('An alert about cookies will be shown to visitors from the countries selected above, provided they have neither opted in nor out.') }}</p>
+                        <p>{{ __('When set to <em>Manually</em>, the alert can be rendered inside a theme using the code: <code>&lt;?php echo apply_filters(\'cookillian_alert\', \'\'); ?&gt;</code> or using shortcode <code>[cookillian alert]</code>.') | raw }}</p>
+                        <label>
+                            <input type="radio" name="alert_show" value="auto" {% if alert_show == 'auto' %}checked="checked"{% endif %} />
+                            {{ __('Automatic') }}
+                        </label>
+                        <br />
+                        <label>
+                            <input type="radio" name="alert_show" value="manual" {% if alert_show == "manual" %}checked="checked"{% endif %} />
+                            {{ __('Manually') }}
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Alert Content') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="radio" name="alert_content_type" value="default" {% if alert_content_type == 'default' %}checked="checked"{% endif %} />
+                            {{ __('Default') }}
+                        </label>
+                        <br />
+                        <label>
+                            <input type="radio" name="alert_content_type" value="custom" {% if alert_content_type == "custom" %}checked="checked"{% endif %} />
+                            {{ __('Custom') }}
+                        </label>
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <h3>Content</h3>
+        <table class="form-table alert_normal">
+            <tbody>
+                <tr>
+                    <th scope="row">
+                        {{ __('Alert Heading') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="text" name="alert_heading" id="alert_heading" value="{{ alert_heading }}" />
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Alert Text') }}
+                    </th>
+                    <td>
+                        <label>
+                            <textarea name="alert_content" id="alert_content">{{ alert_content }}</textarea>
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Opt-In Button') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="text" name="alert_ok" id="alert_ok" value="{{ alert_ok }}" />
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Opt-Out Button') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="text" name="alert_no" id="alert_no" value="{{ alert_no }}" />
+                        </label>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="form-table alert_custom">
+            <tbody>
+                <tr>
+                    <th scope="row">
+                        {{ __('Custom Alert Code') }}
+                    </th>
+                    <td>
+                        <p>{{ __('Use HTML to create your own custom alert:') }}</p>
+                        <label>
+                            <textarea class="code" name="alert_custom_content" id="alert_custom_content">{{ alert_custom_content }}</textarea>
+                        </label>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="form-table">
+            <tbody>
+                <tr>
+                    <th scope="row">
+                        {{ __('"Required" Cookie Text') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="text" name="required_text" id="required_text" value="{{ required_text }}" />
+                        </label>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h3>JavaScript</h3>
+        <table class="form-table script_header_footer">
+            <tbody>
+                <tr>
+                    <th></th>
+                    <td>
+                        <p>{{ __('The following JavaScript will be loaded in the page header and/or footer when cookies are permitted. For example, this could be used to load Google Analytics. See <strong>Help</strong> for more information.') | raw }}</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        {{ __('Header') }}
+                    </th>
+                    <td>
+                        <label>
+                            <textarea class="code" name="script_header" id="script_header">{{ script_header }}</textarea>
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Footer') }}
+                    </th>
+                    <td>
+                        <label>
+                            <textarea class="code" name="script_footer" id="script_footer">{{ script_footer }}</textarea>
+                        </label>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+
+        {{ submit_button | raw }}
+
+    </form>
+
+    <div id="my_footer">
+        <img src="{{ plugin_base_url }}resources/images/myatus_logo_white.png" alt="Myatu's"/><br>
+        <span>
+            <a href="{{ plugin_home }}" target="_blank">{{ plugin_name }} {{ plugin_version }}</a> |
+            <a href="#" target="_blank">{{ __('Rate It') }}</a> |
+            <a href="#" target="_blank">{{ __('Forum') }}</a> |
+            <a href="http://pledgie.com/campaigns/16906" target="_blank">{{ __('Donate') }}</a>
+        </span>
+    </div>
+</div> {# REL DIV #}
