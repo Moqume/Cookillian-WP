@@ -80,7 +80,7 @@ echo "Cleaning output directory"
 if [ -f "${OUTDIR}/export.sh" ]; then rm "${OUTDIR}/export.sh"; fi
 if [ -f "${OUTDIR}/.gitignore" ]; then rm "${OUTDIR}/.gitignore"; fi
 if [ -f "${OUTDIR}/.gitmodules" ]; then rm "${OUTDIR}/.gitmodules"; fi
-if [ -f "${OUTDIR}/README.MD" ]; then rm "${OUTDIR}/README.MD"; fi
+if [ -f "${OUTDIR}/README.md" ]; then rm "${OUTDIR}/README.md"; fi
 
 # Remove directories that are not needed in the export
 if [ -d "${OUTDIR}/vendor/Twig/doc" ]; then rm -r "${OUTDIR}/vendor/Twig/doc"; fi

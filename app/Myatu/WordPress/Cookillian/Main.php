@@ -26,6 +26,15 @@ class Main extends \Pf4wp\WordpressPlugin
     // Non-persistent cache
     protected $np_cache = array();
 
+    // Common crawlers/spiders
+    protected $crawlers = array(
+        'Yandex','YaDirectBot','Googlebot','bingbot','msnbot','Teoma','Slurp','YahooSeeker','BlitzBOT',
+        'B-l-i-t-z-B-O-T','Baiduspider','btbot','Charlotte','Exabot','FAST-WebCrawler','FurlBot',
+        'FyberSpider','GalaxyBot','genieBot','GurujiBot','holmes','LapozzBot','LexxeBot','MojeekBot',
+        'NetResearchServer','NG-Search','nuSearch','PostBot','Scrubby','Seekbot','ShopWiki',
+        'Speedy Spider','StackRambler','yacybot'
+    );
+
     // Flag to indicate (to JS) whether cookies are blocked
     protected $cookies_blocked;
 
@@ -43,6 +52,7 @@ class Main extends \Pf4wp\WordpressPlugin
         'alert_ok'           => 'Yes, I\'m happy with this',
         'alert_no'           => 'No! Only store this answer, but nothing else',
         'required_text'      => 'This cookie is required for the operation of this website.',
+        'stats'              => array(),
     );
 
     /** -------------- HELPERS -------------- */
@@ -345,6 +355,63 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
+     * Adds a statistic about the responses (or lack thereof)
+     *
+     * This saves the details in the 'stats' array, where the first key is the year,
+     * 2nd key the month and 3rd the country of the visitor. It contains how often
+     * the alert was displayed, how often one opted in and how often one opted out.
+     *
+     * @param string $type One of: 'displayed', 'optin', 'optout'
+     *
+     */
+    public function addStat($type)
+    {
+        // First figure out if we're dealing with a crawler/spider
+        if (preg_match('#' . implode('|', $this->crawlers) . '#i', $_SERVER['HTTP_USER_AGENT']))
+            return;
+
+        $remote_country = $this->getCountryCode($this->getRemoteIP());
+        $stats          = $this->options->stats;
+        $country_stats  = array(0, 0, 0);
+        $date           = getdate();
+        $year           = $date['year'];
+        $month          = $date['month'];
+
+        // Ensure we have a year
+        if (!isset($stats[$year]))
+            $stats[$year] = array($month => array());
+
+        // Ensure we have a month
+        if (!isset($stats[$year][$month]))
+            $stats[$year][$month] = array();
+
+        // Grab the current country stats, if any
+        if (isset($stats[$year][$month][$remote_country]))
+            $country_stats = $stats[$year][$month][$remote_country];
+
+        // Update the stats
+        switch ($type) {
+            case 'displayed' :
+                $country_stats[0]++;
+                break;
+
+            case 'optin' :
+                $country_stats[1]++;
+                break;
+
+            case 'optout' :
+                $country_stats[2]++;
+                break;
+        }
+
+        // Return the updated stats back to where they belong
+        $stats[$year][$month][$remote_country] = $country_stats;
+
+        // And save
+        $this->options->stats = $stats;
+    }
+
+    /**
      * Processes a response to the question of permitting cookies
      */
     public function processResponse($answer)
@@ -354,11 +421,13 @@ class Main extends \Pf4wp\WordpressPlugin
         switch ($answer) {
             case 1 :
                 // Opt In
+                $this->addStat('optin');
                 $opt_in_or_out = $this->short_name . static::OPTIN_ID;
                 break;
 
             case 0 :
                 // Opt Out
+                $this->addStat('optout');
                 $opt_in_or_out = $this->short_name . static::OPTOUT_ID;
                 break;
         }
@@ -368,7 +437,7 @@ class Main extends \Pf4wp\WordpressPlugin
             return;
 
         // Set a cookie with the visitor's response
-        Cookies::set($this->short_name . static::OPTIN_ID, 1, strtotime(static::COOKIE_LIFE), true, false, '/');
+        Cookies::set($opt_in_or_out, 1, strtotime(static::COOKIE_LIFE), true, false, '/');
 
         // And send the visitor back to where they were
         wp_redirect($_SERVER['HTTP_REFERER']);
@@ -526,6 +595,8 @@ class Main extends \Pf4wp\WordpressPlugin
 
         // If cookies are found to be blocked, and we haven't specifically opted out, we show an alert
         if ($this->cookies_blocked && !$this->optedOut()) {
+            $this->addStat('displayed');
+
             if ($this->options->alert_content_type == 'default') {
                 // Default alert
                 $vars = array(
@@ -617,6 +688,9 @@ class Main extends \Pf4wp\WordpressPlugin
         $cookie_menu = $mymenu->addSubmenu(__('Cookies', $this->getName()), array($this, 'onCookiesMenu'));
         $cookie_menu->count = count($this->options->known_cookies);
         $cookie_menu->context_help = new ContextHelp($this, 'cookies');
+
+        // Add statistics menu
+        $stats_menu = $mymenu->addSubmenu(__('Statistics', $this->getName()), array($this, 'onStatsMenu'));
 
         return $mymenu;
     }
@@ -757,6 +831,35 @@ class Main extends \Pf4wp\WordpressPlugin
         );
 
         $this->template->display('cookies.html.twig', $vars);
+    }
+
+    /**
+     * Renders the statistics menu page
+     */
+    public function onStatsMenu()
+    {
+        $stats = $this->options->stats;
+        $date  = getdate();
+        $year  = $date['year'];
+        $years = array_keys($stats);
+
+        // Sort available years
+        sort($years);
+
+        // Pick a year
+        if (!empty($_REQUEST) && isset($_REQUEST['stat_year']) && is_numeric($_REQUEST['stat_year'])) {
+            $year = intval($_REQUEST['stat_year']);
+        }
+//var_dump($this->getCountries());
+
+        $vars = array(
+            'year'      => $year,
+            'years'     => $years,
+            'stats'     => $stats[$year],
+            'countries' => $this->getCountries(),
+        );
+
+        $this->template->display('stats.html.twig', $vars);
     }
 
 }
