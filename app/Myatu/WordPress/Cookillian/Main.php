@@ -473,6 +473,10 @@ class Main extends \Pf4wp\WordpressPlugin
                     'desc'  => 'This cookie helps remember your personal preferences within WordPress.',
                     'group' => 'Wordpress',
                 ),
+                $this->short_name . '_opt_*' => array(
+                    'desc'  => 'This cookie stores your preference regarding the use of cookies on this website.',
+                    'group' => 'Website',
+                ),
             );
         }
 
