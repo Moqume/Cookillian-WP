@@ -209,7 +209,7 @@ class Main extends \Pf4wp\WordpressPlugin
             return false;
 
         // If the user has opted out of cookies, we skip the country check
-/*        if (!$this->optedOut()) {
+        if (!$this->optedOut()) {
             // Check where the visitor is from and continue if from one selected in options
             $countries = $this->options->countries;
 
@@ -221,7 +221,7 @@ class Main extends \Pf4wp\WordpressPlugin
                     return false;
             }
         }
-*/
+
         // If we reach this point, cookies will be deleted based on their settings.
         $new_cookies  = array();
         $session_name = session_name();
@@ -397,11 +397,11 @@ class Main extends \Pf4wp\WordpressPlugin
         if (empty($known_cookie)) {
             $this->options->known_cookies = array(
                 'wordpress_*' => array(
-                    'desc'  => '',
+                    'desc'  => 'This cookie stores WordPress authentication details.',
                     'group' => 'Wordpress',
                 ),
                 'wp-settings-*' => array(
-                    'desc'  => '',
+                    'desc'  => 'This cookie helps remember your personal preferences within WordPress.',
                     'group' => 'Wordpress',
                 ),
             );
