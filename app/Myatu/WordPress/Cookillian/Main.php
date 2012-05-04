@@ -11,6 +11,7 @@ namespace Myatu\WordPress\Cookillian;
 
 use Pf4wp\Common\Cookies;
 use Pf4wp\Common\Helpers;
+use Pf4wp\Help\ContextHelp;
 use Pf4wp\Notification\AdminNotice;
 
 class Main extends \Pf4wp\WordpressPlugin
@@ -28,6 +29,7 @@ class Main extends \Pf4wp\WordpressPlugin
     // Flag to indicate (to JS) whether cookies are blocked
     protected $cookies_blocked;
 
+    // Default options
     protected $default_options = array(
         'geo_service'        => 'geoplugin',
         'cookie_groups'      => array('Unknown'),
@@ -609,11 +611,12 @@ class Main extends \Pf4wp\WordpressPlugin
 
         // Add settings menu
         $main_menu = $mymenu->addMenu(__('Cookies'), array($this, 'onSettingsMenu'));
-        //$main_menu->context_help = new ContextHelp($this, 'settings');
+        $main_menu->context_help = new ContextHelp($this, 'settings');
 
         // Add cookies menu
         $cookie_menu = $mymenu->addSubmenu(__('Cookies', $this->getName()), array($this, 'onCookiesMenu'));
         $cookie_menu->count = count($this->options->known_cookies);
+        $cookie_menu->context_help = new ContextHelp($this, 'cookies');
 
         return $mymenu;
     }

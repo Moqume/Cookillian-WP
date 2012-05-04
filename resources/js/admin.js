@@ -1,0 +1,8 @@
+/*!
+ * Copyright (c) 2012 Mike Green <myatus@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ */
+if(cookillian===undefined){var cookillian={}}(function(b){cookillian={showHideCustomAlert:function(){var a=b('input[name="alert_content_type"]:checked'),e=b(".alert_normal"),f=b(".alert_custom");if(!a.length){return}if(a.val()=="custom"){f.show();e.hide()}else{f.hide();e.show()}}};b(document).ready(function(a){var d=a(".cookie_table");if(d.length){a(".col_blank",d).width(d.width()-a("table",d).width())}a(".multi_checkbox li").each(function(){var h=a(this),c=a('input[type="checkbox"]',this),g=c.is(":checked");if(g){h.addClass("highlighted")}c.change(function(e){h.toggleClass("highlighted")})});a("#add_new_cookie_btn").click(function(){var c="new_"+Math.floor((Math.random()*99999));a('<tr class="new_cookie" style="display:none;"><td class="col_name"><input type="text" value="" name="known_cookies['+c+'][name]" placeholder="Enter the cookie name here"/></td><td class="col_desc"><textarea name="known_cookies['+c+'][desc]"></textarea></td><td class="col_group"><input type="text" value="" name="known_cookies['+c+'][group]" /></td><td class="col_req"><input type="checkbox" name="known_cookies['+c+'][required]" /></td><td class="col_del"><input type="checkbox" name="known_cookies['+c+'][delete]" /></td></tr>').prependTo(a("table tbody",d)).fadeIn("slow");a("input:first",d).focus();return false});a('input[name="alert_content_type"]').change(cookillian.showHideCustomAlert);cookillian.showHideCustomAlert()})})(jQuery);

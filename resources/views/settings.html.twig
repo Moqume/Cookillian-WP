@@ -83,8 +83,6 @@
                         {{ __('Show Alert') }}
                     </th>
                     <td>
-                        <p>{{ __('An alert about cookies will be shown to visitors from the countries selected above, provided they have neither opted in nor out.') }}</p>
-                        <p>{{ __('When set to <em>Manually</em>, the alert can be rendered inside a theme using the code: <code>&lt;?php echo apply_filters(\'cookillian_alert\', \'\'); ?&gt;</code> or using shortcode <code>[cookillian alert]</code>.') | raw }}</p>
                         <label>
                             <input type="radio" name="alert_show" value="auto" {% if alert_show == 'auto' %}checked="checked"{% endif %} />
                             {{ __('Automatic') }}
@@ -203,7 +201,7 @@
                 <tr>
                     <th></th>
                     <td>
-                        <p>{{ __('The following JavaScript will be loaded in the page header and/or footer when cookies are permitted. For example, this could be used to load Google Analytics. See <strong>Help</strong> for more information.') | raw }}</p>
+                        <p>{{ __('The following JavaScript will <em>only</em> be loaded in the page header and/or footer when cookies are permitted. For example, this could be used to load Google Analytics. See <strong>Help</strong> for complex JavaScript use.') | raw }}</p>
                     </td>
                 </tr>
                 <tr>
