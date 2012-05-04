@@ -6,6 +6,9 @@
 #}
 
 {% set thr = '' %}
+{% set total_display = 0 %}
+{% set total_optin   = 0 %}
+{% set total_optout  = 0 %}
 <div style="position: relative; width: 100%;"> {# REL DIV #}
     <form method="post" action="" id="year_form">
         <select name="stat_year">
@@ -38,16 +41,29 @@
                 {% endif %}
 
                 {% for country_abbr, country_stat in month_stat|sort %}
-                <tr>
-                    <td>{{ countries[country_abbr].country }}</td>
-                    <td>{{ country_stat.0 }}</td>
-                    <td>{{ country_stat.1 }}</td>
-                    <td>{{ country_stat.2 }}</td>
-                    <td>{{ country_stat.0 - (country_stat.1 + country_stat.2) }}</td>
-                </tr>
+                    {% set total_display = total_display + country_stat.0 %}
+                    {% set total_optin   = total_optin   + country_stat.1 %}
+                    {% set total_optout  = total_optout  + country_stat.2 %}
+
+                    <tr>
+                        <td>{{ countries[country_abbr].country }}</td>
+                        <td>{{ country_stat.0 }}</td>
+                        <td>{{ country_stat.1 }}</td>
+                        <td>{{ country_stat.2 }}</td>
+                        <td>{{ country_stat.0 - (country_stat.1 + country_stat.2) }}</td>
+                    </tr>
                 {% endfor %}
             {% endfor %}
         </tbody>
+        <tfoot>
+            <tr>
+                <th scope="col">{{ __('Total:') }}</th>
+                <th scope="col">{{ total_display }}</th>
+                <th scope="col">{{ total_optin }}</th>
+                <th scope="col">{{ total_optout }}</th>
+                <th scope="col">{{ total_display - (total_optin + total_optout) }}</th>
+            </tr>
+        </tfoot>
     </table>
 
 </div> {# REL DIV #}

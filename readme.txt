@@ -20,6 +20,8 @@ It will also collect basic information about any cookies set from within WordPre
 
 If the visitor allows for cookies (either through opt in or a visitor outside the countries specified), then additional Javascript can be included at the website's header and/or footer, allowing the inclusion of, for example, Google Analytics. This allows for better control over 3rd party cookies.
 
+With the included statistics, you can see how many visitors have decided to opt in, out or ignore the cookie alert per country, for each month of the year.
+
 = Features =
 
 * Selective filtering/alerts based on the visitor's originating country
@@ -32,6 +34,7 @@ If the visitor allows for cookies (either through opt in or a visitor outside th
 * Support for [CloudFlare](http://www.cloudflare) geolocation HTTP headers
 * Automatic rendering of details about cookies using shortcodes
 * Exposed JavaScript variables regarding cookie permissions, opt-in and opt-out for complex sites
+* Statistics on opt in, out and 'ignores'
 
 == Installation ==
 
@@ -51,7 +54,8 @@ with PHP versions older than 5.3.
 
 == Screenshots ==
 
-1.
+1. The default alert dispalyed to visitors
+2. Statistics to track compliance impact
 
 == Changelog ==
 
