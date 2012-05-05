@@ -8,7 +8,7 @@ Stable tag: 0.0.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
-Provides extensible support for EU/UK compliance of the EC Cookie Directive, based on a visitor's location.
+Provides extensible support for EU/UK compliance of the EC Cookie Directive (2009/136/EC), based on a visitor's location.
 
 == Description ==
 
@@ -29,12 +29,13 @@ With the included statistics, you can see how many visitors have decided to opt 
 * Fully customizable alert/information about cookies
 * Optional JavaScript loading if cookies are permitted
 * Support for Cookie-based PHP Sessions
+* Define cookies that are required for the operation of the website
 * Automatic collection of cookies used by the website
-* Support for [geoPlugin](http://www.geoplugin.com) geoloction
-* Support for [CloudFlare](http://www.cloudflare) geolocation HTTP headers
 * Automatic rendering of details about cookies using shortcodes
+* Support for [geoPlugin](http://www.geoplugin.com) geoloction service
+* Support for [CloudFlare](http://www.cloudflare) geolocation HTTP headers
 * Exposed JavaScript variables regarding cookie permissions, opt-in and opt-out for complex sites
-* Statistics on opt in, out and 'ignores'
+* Statistics to track the impact of the EC Directive
 
 == Installation ==
 

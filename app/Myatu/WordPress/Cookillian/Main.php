@@ -220,16 +220,18 @@ class Main extends \Pf4wp\WordpressPlugin
 
         // If the user has opted out of cookies, we skip the country check
         if (!$this->optedOut()) {
-            // Check where the visitor is from and continue if from one selected in options
             $countries = $this->options->countries;
 
-            if (!empty($countries)) {
-                $remote_country = $this->getCountryCode($this->getRemoteIP());
+            // If no countries have been selected in the options, we're done.
+            if (empty($countries))
+                return false;
 
-                // We're done if the visitor isn't in one of the selected countries
-                if (!in_array($remote_country, $countries))
-                    return false;
-            }
+            // Check where the visitor is from and continue if from one selected in options
+            $remote_country = $this->getCountryCode($this->getRemoteIP());
+
+            // We're done if the visitor isn't in one of the selected countries
+            if (!in_array($remote_country, $countries))
+                return false;
         }
 
         // If we reach this point, cookies will be deleted based on their settings.
@@ -316,7 +318,7 @@ class Main extends \Pf4wp\WordpressPlugin
             // Simple check found nothing, see if we need to perform a heavier check using wildcards
             foreach ($known_cookies as $known_cookie_name => $known_cookie_value) {
                 if (strpos($known_cookie_name, '*') !== false || strpos($known_cookie_name, '?') !== false) {
-                    $pattern = '/^' . strtr($known_cookie_name, array('*' => '.+', '?' => '.')) . '$/';
+                    $pattern = '/^' . strtr($known_cookie_name, array('*' => '.+', '?' => '.', '/' => '\/')) . '$/';
 
                     if (preg_match($pattern, $cookie_name)) {
                         $required = (isset($known_cookie_value['required']) && !empty($known_cookie_value['required']));
@@ -456,6 +458,14 @@ class Main extends \Pf4wp\WordpressPlugin
         return is_array($val) ? array_map(array($this, 'deepStripSlashes'), $val) : stripslashes($val);
     }
 
+    /**
+     * Helper to encase a JavaScript code block
+     */
+    protected function jsBlock($code)
+    {
+        sprintf("<script type=\"text/javascript\">\r\n/* <![CDATA[ */\r\n%s\r\n/* ]]> */\r\n</script>\r\n", $code);
+    }
+
     /** -------------- EVENTS -------------- */
 
     public function onActivation()
@@ -492,16 +502,16 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     public function onRegisterActions()
     {
+        // Was there a response to the cookie alert?
+        if (isset($_REQUEST[$this->short_name . static::RESP_ID]))
+            $this->processResponse((int)$_REQUEST[$this->short_name . static::RESP_ID]);
+
         add_action('shutdown', array($this, 'onShutdown'), 99, 0);
         add_filter($this->short_name . '_alert', array($this, 'onFilterAlert'));
         add_shortcode($this->short_name, array($this, 'onShortCode'));
 
         // Cookies are handled as early as possible here, disabling sessions, etc.
         $this->cookies_blocked = $this->handleCookies();
-
-        // Was there a response to the cookie alert?
-        if (isset($_REQUEST[$this->short_name . static::RESP_ID]))
-            $this->processResponse((int)$_REQUEST[$this->short_name . static::RESP_ID]);
     }
 
     /**
@@ -512,7 +522,8 @@ class Main extends \Pf4wp\WordpressPlugin
     public function onShutdown()
     {
         // Cookies are once more handled here, to delete any cookies added after we first handled them
-        $this->handleCookies();
+        if (!headers_sent())
+            $this->handleCookies();
     }
 
     /**
@@ -541,12 +552,12 @@ class Main extends \Pf4wp\WordpressPlugin
     public function onPublicScripts()
     {
         // JavaScript exposing whether cookies have been blocked and whether the visitor has opted out or in
-        printf("<script type=\"text/javascript\">\r\n/* <![CDATA[ */\r\nvar cookillian = {\"blocked_cookies\":%s,\"opted_out\":%s,\"opted_in\":%s,\"_manual\":%s};\r\n/* ]]> */\r\n</script>\r\n",
+        echo $this->jsBlock(sprintf("var cookillian = {\"blocked_cookies\":%s,\"opted_out\":%s,\"opted_in\":%s,\"_manual\":%s};",
             ($this->cookies_blocked) ? 'true' : 'false',
             ($this->optedOut()) ? 'true' : 'false',
             ($this->optedIn()) ? 'true' : 'false',
             ($this->options->alert_show == 'manual') ? 'true' : 'false'
-        );
+        ));
 
         // @see onPublicfooter()
         if ($this->cookies_blocked && !$this->optedOut() && $this->options->alert_content_type == 'default') {
@@ -557,7 +568,7 @@ class Main extends \Pf4wp\WordpressPlugin
 
         // Load custom script header
         if (!$this->cookies_blocked && $this->options->script_header)
-            printf("<script type=\"text/javascript\">\r\n/* <![CDATA[ */\r\n%s\r\n/* ]]> */\r\n</script>\r\n", stripslashes($this->options->script_header));
+            echo $this->jsBlock(stripslashes($this->options->script_header));
     }
 
     /**
@@ -584,7 +595,7 @@ class Main extends \Pf4wp\WordpressPlugin
 
         // Load custom script footer
         if (!$this->cookies_blocked && $this->options->script_footer)
-            printf("<script type=\"text/javascript\">\r\n/* <![CDATA[ */\r\n%s\r\n/* ]]> */\r\n</script>\r\n", stripslashes($this->options->script_footer));
+            echo $this->jsBlock(stripslashes($this->options->script_footer));
     }
 
     /**
@@ -663,7 +674,7 @@ class Main extends \Pf4wp\WordpressPlugin
                 $cookies = $this->deepStripSlashes($cookies);
 
                 // Sort by group
-                uasort($cookies, function($a,$b) { return strcasecmp($a['desc'], $b['desc']); });
+                uasort($cookies, function($a,$b) { return strcasecmp($a['group'], $b['group']); });
 
                 return $this->template->render('cookie_table.html.twig', array(
                     'cookies'       => $cookies,
