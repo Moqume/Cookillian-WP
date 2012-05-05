@@ -489,7 +489,7 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     protected function jsBlock($code)
     {
-        sprintf("<script type=\"text/javascript\">\r\n/* <![CDATA[ */\r\n%s\r\n/* ]]> */\r\n</script>\r\n", $code);
+        return sprintf("<script type=\"text/javascript\">\r\n/* <![CDATA[ */\r\n%s\r\n/* ]]> */\r\n</script>\r\n", $code);
     }
 
     /** -------------- EVENTS -------------- */
