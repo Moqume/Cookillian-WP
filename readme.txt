@@ -4,7 +4,7 @@ Donate link: http://pledgie.com/campaigns/16906
 Tags: cookie, eu, ec, europe, uk, law, directive, filter, block
 Requires at least: 3.3
 Tested up to: 3.4-beta3
-Stable tag: 0.0.1
+Stable tag: 1.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -60,9 +60,9 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 0.0.1 () =
+= 1.0 (5 May 2012) =
 
-Development Version
+First Release
 
 == Frequently Asked Questions ==
 
