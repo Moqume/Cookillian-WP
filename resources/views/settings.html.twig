@@ -91,6 +91,7 @@
                         <label>
                             <input type="radio" name="alert_show" value="manual" {% if alert_show == "manual" %}checked="checked"{% endif %} />
                             {{ __('Manually') }}
+                            <span class="description">{{ __('See <strong>Help</strong> how to display the alert.') | raw }}</span>
                         </label>
                     </td>
                 </tr>
@@ -201,7 +202,7 @@
                 <tr>
                     <th></th>
                     <td>
-                        <p>{{ __('The following JavaScript will <em>only</em> be loaded in the page header and/or footer when cookies are permitted. For example, this could be used to load Google Analytics. See <strong>Help</strong> for complex JavaScript use.') | raw }}</p>
+                        <p>{{ __('The following JavaScript will <em>only</em> be loaded in the page header and/or footer when cookies are permitted. This could be used for scripts that set 3rd party cookies, such as Google Analytics. See <strong>Help</strong> for complex JavaScript use.') | raw }}</p>
                     </td>
                 </tr>
                 <tr>

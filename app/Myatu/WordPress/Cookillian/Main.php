@@ -862,10 +862,8 @@ class Main extends \Pf4wp\WordpressPlugin
         sort($years);
 
         // Pick a year
-        if (!empty($_REQUEST) && isset($_REQUEST['stat_year']) && is_numeric($_REQUEST['stat_year'])) {
+        if (!empty($_REQUEST) && isset($_REQUEST['stat_year']) && is_numeric($_REQUEST['stat_year']))
             $year = intval($_REQUEST['stat_year']);
-        }
-//var_dump($this->getCountries());
 
         $vars = array(
             'year'      => $year,
