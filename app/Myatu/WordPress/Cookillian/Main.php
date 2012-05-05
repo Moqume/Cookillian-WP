@@ -40,19 +40,20 @@ class Main extends \Pf4wp\WordpressPlugin
 
     // Default options
     protected $default_options = array(
-        'geo_service'        => 'geoplugin',
-        'cookie_groups'      => array('Unknown'),
-        'auto_add_cookies'   => true,
-        'countries'          => array(),
-        'known_cookies'      => array(),
-        'alert_show'         => 'auto',
-        'alert_content_type' => 'default',
-        'alert_content'      => "This site uses cookies to store information on your computer. Some of these cookies are essential to make our site work and others help us to improve by giving us some insight into how the site is being used. <a href=\"#\">More information</a>. \r\n\r\nBy using our site you accept the terms of our <a href=\"#\">Privacy Policy</a>. \r\n",
-        'alert_heading'      => 'Information regarding cookies',
-        'alert_ok'           => 'Yes, I\'m happy with this',
-        'alert_no'           => 'No! Only store this answer, but nothing else',
-        'required_text'      => 'This cookie is required for the operation of this website.',
-        'stats'              => array(),
+        'geo_service'         => 'geoplugin',
+        'cookie_groups'       => array('Unknown'),
+        'auto_add_cookies'    => true,
+        'delete_root_cookies' => true,
+        'countries'           => array(),
+        'known_cookies'       => array(),
+        'alert_show'          => 'auto',
+        'alert_content_type'  => 'default',
+        'alert_content'       => "This site uses cookies to store information on your computer. Some of these cookies are essential to make our site work and others help us to improve by giving us some insight into how the site is being used. <a href=\"#\">More information</a>. \r\n\r\nBy using our site you accept the terms of our <a href=\"#\">Privacy Policy</a>. \r\n",
+        'alert_heading'       => 'Information regarding cookies',
+        'alert_ok'            => 'Yes, I\'m happy with this',
+        'alert_no'            => 'No! Only store this answer, but nothing else',
+        'required_text'       => 'This cookie is required for the operation of this website.',
+        'stats'               => array(),
     );
 
     /** -------------- HELPERS -------------- */
@@ -260,8 +261,13 @@ class Main extends \Pf4wp\WordpressPlugin
 
             // If sessions aren't required and there's one open, destroy it
             if (!$this->options->php_sessions_required && session_id()) {
-                // Destroy active session
-                Cookies::delete($session_name);
+                $_SESSION = array();
+
+                $params = session_get_cookie_params();
+                setcookie(session_name(), '', time() - 3600,
+                    $params["path"],   $params["domain"],
+                    $params["secure"], $params["httponly"]
+                );
 
                 @session_destroy();
             }
@@ -288,8 +294,28 @@ class Main extends \Pf4wp\WordpressPlugin
             }
 
             // If the cookie is not required, delete it
-            if (!$is_required)
+            if (!$is_required) {
+                if (isset($_SERVER['HTTP_HOST'])) {
+                    list($wc, $domain) = explode('.', $_SERVER['HTTP_HOST'], 2);
+
+                    if (strpos($domain, '.') === false)
+                        $domain = $_SERVER['HTTP_HOST'];
+
+                    // Attempt to delete a root "wildcard" cookie
+                    if ($this->options->delete_root_cookies)
+                        setcookie($cookie_name, '', time() - 3600, '/', '.' . $domain);
+
+                    // Attempt to delete a local "wildcard" cookie
+                    setcookie($cookie_name, '', time() - 3600, false, '.' . $domain);
+                }
+
+                // Attempt to delete the "root" cookie
+                if ($this->options->delete_root_cookies)
+                    setcookie($cookie_name, '', time() - 3600, '/');
+
+                // Delete local cookie
                 Cookies::delete($cookie_name);
+            }
         }
 
         // Update known cookies with what we've found, if anything
@@ -722,6 +748,7 @@ class Main extends \Pf4wp\WordpressPlugin
             // Save
             $this->options->load($_POST, array(
                 'auto_add_cookies'      => 'bool',
+                'delete_root_cookies'   => 'bool',
                 'php_sessions_required' => 'bool',
                 'geo_service'           => array('in_array', array('geoplugin','cloudflare')),
                 'alert_show'            => array('in_array', array('auto', 'manual')),
@@ -770,6 +797,7 @@ class Main extends \Pf4wp\WordpressPlugin
             'countries'             => $this->getCountries(true),
             'geo_services'          => $geo_services,
             'auto_add_cookies'      => $this->options->auto_add_cookies,
+            'delete_root_cookies'   => $this->options->delete_root_cookies,
             'php_sessions_required' => $this->options->php_sessions_required,
             'alert_show'            => $this->options->alert_show,
             'alert_content_type'    => $this->options->alert_content_type,

@@ -38,6 +38,18 @@
 
                 <tr>
                     <th scope="row">
+                        {{ __('Root Cookies') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="delete_root_cookies" {% if delete_root_cookies %}checked="checked"{% endif %} />
+                            {{ __('Filter root cookies in addition to local cookies') }}
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
                         {{ __('Geolocation Service') }}
                     </th>
                     <td>
