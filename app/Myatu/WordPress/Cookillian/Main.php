@@ -533,8 +533,15 @@ class Main extends \Pf4wp\WordpressPlugin
             $this->processResponse((int)$_REQUEST[$this->short_name . static::RESP_ID]);
 
         add_action('shutdown', array($this, 'onShutdown'), 99, 0);
-        add_filter($this->short_name . '_alert', array($this, 'onFilterAlert'));
+
+        // Shortcode
         add_shortcode($this->short_name, array($this, 'onShortCode'));
+
+        // Filters
+        add_filter($this->short_name . '_alert', array($this, 'onFilterAlert'));
+        add_filter($this->short_name . '_blocked_cookies', array($this, 'onFilterBlockedCookies'));
+        add_filter($this->short_name . '_opted_in', array($this, 'onFilterOptedIn'));
+        add_filter($this->short_name . '_opted_out', array($this, 'onFilterOptedOut'));
 
         // Cookies are handled as early as possible here, disabling sessions, etc.
         $this->cookies_blocked = $this->handleCookies();
@@ -658,6 +665,39 @@ class Main extends \Pf4wp\WordpressPlugin
         }
 
         return $result;
+    }
+
+    /**
+     * Filter for the optedIn() function
+     *
+     * @param mixed $original Original value passed to the filter (ignored)
+     */
+    public function onFilterOptedIn($original)
+    {
+        return $this->optedIn();
+    }
+
+    /**
+     * Filter for the OptedOut() function
+     *
+     * @param mixed $original Original value passed to the filter (ignored)
+     */
+    public function onFilterOptedOut($original)
+    {
+        return $this->optedOut();
+    }
+
+    /**
+     * Filter to return the $blocked_cookies status
+     *
+     * @param mixed $original Original value passed to the filter
+     */
+    public function onFilterBlockedCookies($original)
+    {
+        if (isset($this->cookies_blocked))
+            return $this->cookies_blocked;
+
+        return $original;
     }
 
     /**

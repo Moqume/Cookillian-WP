@@ -4,7 +4,7 @@ Donate link: http://pledgie.com/campaigns/16906
 Tags: cookie, eu, ec, europe, uk, law, directive, filter, block
 Requires at least: 3.3
 Tested up to: 3.4-beta3
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -34,7 +34,7 @@ With the included statistics, you can see how many visitors have decided to opt 
 * Automatic rendering of details about cookies using shortcodes
 * Support for [geoPlugin](http://www.geoplugin.com) geoloction service
 * Support for [CloudFlare](http://www.cloudflare) geolocation HTTP headers
-* Exposed JavaScript variables regarding cookie permissions, opt-in and opt-out for complex sites
+* Exposed PHP/WordPress Filters and JavaScript variables regarding cookie permissions, opt-in and opt-out for complex sites
 * Statistics to track the impact of the EC Directive
 
 == Installation ==
@@ -60,7 +60,8 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.0.2 (8 May 2012) =
+= 1.0.3 (9 May 2012) =
+__Added:__ PHP/WordPress filters for opt-in, opt-out and blocked/unblocked cookies status
 Changed: Updated the vendor libraries
 
 = 1.0.1 (5 May 2012) =
