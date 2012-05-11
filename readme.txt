@@ -1,4 +1,4 @@
-=== Background Manager ===
+=== Cookillian ===
 Contributors: Myatu
 Donate link: http://pledgie.com/campaigns/16906
 Tags: cookie, eu, ec, europe, uk, law, directive, filter, block
