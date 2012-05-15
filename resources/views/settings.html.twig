@@ -25,31 +25,6 @@
 
                 <tr>
                     <th scope="row">
-                        {{ __('PHP Sessions') }}
-                    </th>
-                    <td>
-                        <label>
-                            <input type="checkbox" name="php_sessions_required" {% if php_sessions_required %}checked="checked"{% endif %} />
-                            {{ __('Do not destroy cookie-based PHP sessions') }}
-                            <span class="description">({{ __('Required by some plugins, such as WP e-Commerce') }})</span>
-                        </label>
-                    </td>
-                </tr>
-
-                <tr>
-                    <th scope="row">
-                        {{ __('Root Cookies') }}
-                    </th>
-                    <td>
-                        <label>
-                            <input type="checkbox" name="delete_root_cookies" {% if delete_root_cookies %}checked="checked"{% endif %} />
-                            {{ __('Filter root cookies in addition to local cookies') }}
-                        </label>
-                    </td>
-                </tr>
-
-                <tr>
-                    <th scope="row">
                         {{ __('Geolocation Service') }}
                     </th>
                     <td>
@@ -208,6 +183,7 @@
                 </tr>
             </tbody>
         </table>
+
         <h3>JavaScript</h3>
         <table class="form-table script_header_footer">
             <tbody>
@@ -241,6 +217,59 @@
             </tbody>
         </table>
 
+        <h3>Advanced Options</h3>
+        <table class="form-table">
+            <tbody>
+                <tr>
+                    <th scope="row">
+                        {{ __('PHP Sessions') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="php_sessions_required" {% if php_sessions_required %}checked="checked"{% endif %} />
+                            {{ __('Do not destroy cookie-based PHP sessions') }}
+                            <span class="description">({{ __('Required by some plugins, such as WP e-Commerce') }})</span>
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Root Cookies') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="delete_root_cookies" {% if delete_root_cookies %}checked="checked"{% endif %} />
+                            {{ __('Filter root cookies in addition to local cookies') }}
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('JavaScript Tags') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="js_wrap" {% if js_wrap %}checked="checked"{% endif %} />
+                            {{ __('Automatically wrap optional JavaScript in <code>&lt;script&gt;</code> and <code>&lt;/script&gt;</code> tags') | raw }}
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Debug Mode') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="debug_mode" {% if debug_mode %}checked="checked"{% endif %} />
+                            {{ __('Enable debug mode') }}
+                        </label>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
         {{ submit_button | raw }}
 
@@ -250,8 +279,8 @@
         <img src="{{ plugin_base_url }}resources/images/myatus_logo_white.png" alt="Myatu's"/><br>
         <span>
             <a href="{{ plugin_home }}" target="_blank">{{ plugin_name }} {{ plugin_version }}</a> |
-            <a href="#" target="_blank">{{ __('Rate It') }}</a> |
-            <a href="#" target="_blank">{{ __('Forum') }}</a> |
+            <a href="http://wordpress.org/extend/plugins/cookillian/" target="_blank">{{ __('Rate It') }}</a> |
+            <a href="http://wordpress.org/tags/cookillian" target="_blank">{{ __('Forum') }}</a> |
             <a href="http://pledgie.com/campaigns/16906" target="_blank">{{ __('Donate') }}</a>
         </span>
     </div>

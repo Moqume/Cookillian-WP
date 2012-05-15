@@ -54,6 +54,7 @@ class Main extends \Pf4wp\WordpressPlugin
         'alert_no'            => 'No! Only store this answer, but nothing else',
         'required_text'       => 'This cookie is required for the operation of this website.',
         'stats'               => array(),
+        'js_wrap'             => true,
     );
 
     /** -------------- HELPERS -------------- */
@@ -211,6 +212,13 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     public function handleCookies()
     {
+        // We detect unknown cookies first
+        $this->detectUnknownCookies();
+
+        // Return as 'true' if we're in debug mode
+        if ($this->options->debug_mode)
+            return true;
+
         /* Don't handle any cookies if:
          * - we're in Admin (except doing Ajax),
          * - when someone's logged in or
@@ -236,31 +244,12 @@ class Main extends \Pf4wp\WordpressPlugin
         }
 
         // If we reach this point, cookies will be deleted based on their settings.
-        $new_cookies  = array();
         $session_name = session_name();
 
         // Check if PHP sessions are based on cookies
         if (ini_get('session.use_cookies')) {
-            // Ensure we have PHP session cookie name in the known cookies
-            if (!$this->isKnownCookie($session_name, $is_required)) {
-                // Not in known cookies, add it
-                $new_cookies[$session_name] = array(
-                    'desc'     => 'PHP Session',
-                    'group'    => 'PHP',
-                    'required' => $this->options->php_sessions_required,
-                );
-            } elseif ($is_required != $this->options->php_sessions_required) {
-                // It's in known cookies, but requirement does not match settings
-                $known_cookies = $this->options->known_cookies;
-
-                $known_cookies[$session_name]['required'] = $this->options->php_sessions_required;
-
-                // (direct assignment is not possible)
-                $this->options->known_cookies = $known_cookies;
-            }
-
-            // If sessions aren't required and there's one open, destroy it
             if (!$this->options->php_sessions_required && session_id()) {
+                // If sessions aren't required and there's one open, destroy it
                 $_SESSION = array();
 
                 $params = session_get_cookie_params();
@@ -276,22 +265,14 @@ class Main extends \Pf4wp\WordpressPlugin
             @ini_set('session.use_cookies', '0');
         }
 
-        // Iterate cookies, add any unknown ones to the database and remove cookies that aren't required
+        // Iterate cookies and remove cookies that aren't required
         foreach ($_COOKIE as $cookie_name => $cookie_value) {
             // Skip the opt-out or session cookie
             if ($cookie_name == $this->short_name . static::OPTOUT_ID || $cookie_name == $session_name)
                 continue;
 
-            // Find out if it's a known cookie, and if it's required
-            $is_known = $this->isKnownCookie($cookie_name, $is_required);
-
-            // Add the cookie to the list of "known" cookies, if it's new
-            if (!$is_known && $this->options->auto_add_cookies) {
-                $new_cookies[$cookie_name] = array(
-                    'desc'  => '',
-                    'group' => 'Unknown',
-                );
-            }
+            // Set the $is_required
+            $this->isKnownCookie($cookie_name, $is_required);
 
             // If the cookie is not required, delete it
             if (!$is_required) {
@@ -318,11 +299,54 @@ class Main extends \Pf4wp\WordpressPlugin
             }
         }
 
-        // Update known cookies with what we've found, if anything
-        if (!empty($new_cookies))
-            $this->options->known_cookies = array_merge($this->options->known_cookies, $new_cookies);
-
         return true;
+    }
+
+    /**
+     * Detects any unknown cookie and adds them to our list of "known" cookies
+     */
+    public function detectUnknownCookies()
+    {
+        if (!$this->options->auto_add_cookies)
+            return;
+
+        $new_cookies  = array();
+        $session_name = (ini_get('session.use_cookies')) ? session_name() : false;
+
+        foreach ($_COOKIE as $cookie_name => $cookie_value) {
+            if ($cookie_name == $this->short_name . static::OPTOUT_ID ||
+                $cookie_name == $this->short_name . static::OPTOUT_ID)
+                continue;
+
+            if (!$this->isKnownCookie($cookie_name)) {
+                // We have a new cookie
+
+                if ($cookie_name == $session_name) {
+                    // It's a PHP Session cookie
+                    $new_cookies[$session_name] = array(
+                        'desc'     => 'PHP Session',
+                        'group'    => 'PHP',
+                        'required' => $this->options->php_sessions_required,
+                    );
+                } else {
+                    // It's something else
+                    $new_cookies[$cookie_name] = array(
+                        'desc'  => '',
+                        'group' => 'Unknown',
+                    );
+                }
+            }
+        }
+
+        // Merge new cookies with existing ones
+        $cookies = array_merge($this->options->known_cookies, $new_cookies);
+
+        // Ensure the session cookie has the correct requirement set at all times
+        if ($session_name && isset($cookies[$session_name]))
+            $cookies[$session_name]['required'] = $this->options->php_sessions_required;
+
+        // Save cookies
+        $this->options->known_cookies = $cookies;
     }
 
     /**
@@ -394,6 +418,9 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     public function addStat($type)
     {
+        if ($this->options->debug_mode)
+            return; // Don't track anything in Debug Mode
+
         // First figure out if we're dealing with a crawler/spider
         if (preg_match('#' . implode('|', $this->crawlers) . '#i', $_SERVER['HTTP_USER_AGENT']))
             return;
@@ -447,6 +474,15 @@ class Main extends \Pf4wp\WordpressPlugin
         $opt_in_or_out = '';
 
         switch ($answer) {
+            case 2 :
+                // Reset/clear previous opt-in or out
+                setcookie($this->short_name . static::OPTIN_ID, '', time() - 3600, '/');
+                setcookie($this->short_name . static::OPTIN_OUT, '', time() - 3600, '/');
+
+                wp_redirect($_SERVER['HTTP_REFERER']); die();
+
+                break; // Habit.
+
             case 1 :
                 // Opt In
                 $this->addStat('optin');
@@ -586,22 +622,24 @@ class Main extends \Pf4wp\WordpressPlugin
     {
         // JavaScript exposing whether cookies have been blocked and whether the visitor has opted out or in
         echo $this->jsBlock(sprintf("var cookillian = {\"blocked_cookies\":%s,\"opted_out\":%s,\"opted_in\":%s,\"_manual\":%s};",
-            ($this->cookies_blocked) ? 'true' : 'false',
+            ($this->cookies_blocked && !$this->options->debug_mode) ? 'true' : 'false',
             ($this->optedOut()) ? 'true' : 'false',
             ($this->optedIn()) ? 'true' : 'false',
             ($this->options->alert_show == 'manual') ? 'true' : 'false'
         ));
 
         // @see onPublicfooter()
-        if ($this->cookies_blocked && !$this->optedOut() && $this->options->alert_content_type == 'default') {
+        if (($this->cookies_blocked && !$this->optedOut()) && $this->options->alert_content_type == 'default') {
             list($js_url, $version, $debug) = $this->getResourceUrl();
 
             wp_enqueue_script($this->getName() . '-pub', $js_url . 'pub' . $debug . '.js', array('jquery'), $version);
         }
 
         // Load custom script header
-        if (!$this->cookies_blocked && $this->options->script_header)
-            echo $this->jsBlock(stripslashes($this->options->script_header));
+        if (!$this->cookies_blocked && $this->options->script_header) {
+            $custom_script = stripslashes($this->options->script_header);
+            echo ($this->options->js_wrap) ? $this->jsBlock($custom_script) : $custom_script;
+        }
     }
 
     /**
@@ -627,8 +665,37 @@ class Main extends \Pf4wp\WordpressPlugin
             echo apply_filters('cookillian_alert', '');
 
         // Load custom script footer
-        if (!$this->cookies_blocked && $this->options->script_footer)
-            echo $this->jsBlock(stripslashes($this->options->script_footer));
+        if (!$this->cookies_blocked && $this->options->script_footer) {
+            $custom_script = stripslashes($this->options->script_footer);
+            echo ($this->options->js_wrap) ? $this->jsBlock($custom_script) : $custom_script;
+        }
+
+        // Provide full debug information in the footer
+        if ($this->options->debug_mode) {
+            $sel_countries = $this->options->countries;
+            $countries     = $this->getCountries();
+            $detected_ip   = $this->getRemoteIP();
+            $rem_country   = $this->getCountryCode($detected_ip);
+            $rem_countryl  = isset($countries[$rem_country]) ? $countries[$rem_country]['country'] : 'Unknown';
+            $blk_country   = (in_array($rem_country, $sel_countries));
+
+            $debug_data = array(
+                'Will handle the cookies'   => !($this->optedIn() || (is_admin() && !Helpers::doingAjax()) || is_user_logged_in()),
+                'Is the visitor logged in'  => is_user_logged_in(),
+                'Is Admin (not AJAX)'       => (is_admin() && !Helpers::doingAjax()),
+                'Country list OK'           => !empty($countries),
+                'Detected remote IP address of the visitor' => $detected_ip,
+                '2-letter code of detected country' => $rem_country,
+                'Name of detected country'  => $rem_countryl,
+                'Block cookies for this country' => $blk_country,
+                'Visitor has opted-in'      => $this->optedIn(),
+                'Visitor has opted-out'     => $this->optedOut(),
+            );
+
+            echo "\n<!-- Cookillian Debug Information:\n";
+            var_export($debug_data);
+            echo "\n-->\n";
+        }
     }
 
     /**
@@ -641,7 +708,7 @@ class Main extends \Pf4wp\WordpressPlugin
     {
         $result = $original;
 
-        // If cookies are found to be blocked, and we haven't specifically opted out, we show an alert
+        // If cookies are found to be blocked and we haven't specifically opted out, or in debug mode, we show an alert
         if ($this->cookies_blocked && !$this->optedOut()) {
             $this->addStat('displayed');
 
@@ -801,6 +868,8 @@ class Main extends \Pf4wp\WordpressPlugin
                 'required_text'         => 'string',
                 'script_header'         => 'string',
                 'script_footer'         => 'string',
+                'debug_mode'            => 'bool',
+                'js_wrap'               => 'bool',
             ));
 
             $this->options->countries = (isset($_POST['countries'])) ? $_POST['countries'] : array();
@@ -849,6 +918,8 @@ class Main extends \Pf4wp\WordpressPlugin
             'required_text'         => stripslashes($this->options->required_text),
             'script_header'         => stripslashes($this->options->script_header),
             'script_footer'         => stripslashes($this->options->script_footer),
+            'debug_mode'            => $this->options->debug_mode,
+            'js_wrap'               => $this->options->js_wrap,
         );
 
         $this->template->display('settings.html.twig', $vars);
