@@ -477,11 +477,12 @@ class Main extends \Pf4wp\WordpressPlugin
             case 2 :
                 // Reset/clear previous opt-in or out
                 setcookie($this->short_name . static::OPTIN_ID, '', time() - 3600, '/');
-                setcookie($this->short_name . static::OPTIN_OUT, '', time() - 3600, '/');
+                setcookie($this->short_name . static::OPTOUT_ID, '', time() - 3600, '/');
 
-                wp_redirect($_SERVER['HTTP_REFERER']); die();
+                // Send the visitor back now
+                if (isset($_SERVER['HTTP_REFERER'])) { wp_redirect($_SERVER['HTTP_REFERER']); die(); }
 
-                break; // Habit.
+                break;
 
             case 1 :
                 // Opt In
@@ -503,10 +504,8 @@ class Main extends \Pf4wp\WordpressPlugin
         // Set a cookie with the visitor's response
         Cookies::set($opt_in_or_out, 1, strtotime(static::COOKIE_LIFE), true, false, '/');
 
-        // And send the visitor back to where they were
-        wp_redirect($_SERVER['HTTP_REFERER']);
-
-        die(); // That's all folks!
+        // And send the visitor back to where they were, if possible
+        if (isset($_SERVER['HTTP_REFERER'])) { wp_redirect($_SERVER['HTTP_REFERER']); die(); }
     }
 
     /**
