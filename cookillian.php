@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Cookillian
-Plugin URI:
+Plugin URI: http://www.myatus.com/2012/05/05/cookillian/
 Description: Provides extensible support for EU/UK compliance of the EC Cookie Directive (2009/136/EC), based on a visitor's location.
 Version: 1.0.8
 Author: Mike Green (Myatu)

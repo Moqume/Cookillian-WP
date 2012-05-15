@@ -25,6 +25,7 @@
     font-size: 18px;
     line-height: 26px;
     clear: none;
+    color: #555;
 }
 
 .cookillian-alert .close {
@@ -39,6 +40,8 @@
     background: transparent;
     border: 0;
     -webkit-appearance: none;
+    color: #000;
+    text-decoration: none;
 }
 
 .cookillian-alert .close:hover {
