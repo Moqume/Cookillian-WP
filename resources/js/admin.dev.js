@@ -69,5 +69,8 @@ if (cookillian === undefined)
         /* Show or hide Custom Alert */
         $('input[name="alert_content_type"]').change(cookillian.showHideCustomAlert); cookillian.showHideCustomAlert()
 
+        /* Hide/Show debug information */
+        $('#footer_debug_link').click(function() { $('#footer_debug').toggle(); return false; });
+
     });
 })(jQuery);

@@ -636,7 +636,7 @@ class Main extends \Pf4wp\WordpressPlugin
 
         // Load custom script header
         if (!$this->cookies_blocked && $this->options->script_header) {
-            $custom_script = stripslashes($this->options->script_header);
+            $custom_script = $this->options->script_header;
             echo ($this->options->js_wrap) ? $this->jsBlock($custom_script) : $custom_script;
         }
     }
@@ -665,7 +665,7 @@ class Main extends \Pf4wp\WordpressPlugin
 
         // Load custom script footer
         if (!$this->cookies_blocked && $this->options->script_footer) {
-            $custom_script = stripslashes($this->options->script_footer);
+            $custom_script = $this->options->script_footer;
             echo ($this->options->js_wrap) ? $this->jsBlock($custom_script) : $custom_script;
         }
 
@@ -713,20 +713,20 @@ class Main extends \Pf4wp\WordpressPlugin
 
             if ($this->options->alert_content_type == 'default') {
                 // Default alert
-                $vars = array(
-                    'alert_content' => wpautop(stripslashes($this->options->alert_content)),
-                    'alert_heading' => stripslashes($this->options->alert_heading),
-                    'alert_ok'      => stripslashes($this->options->alert_ok),
-                    'alert_no'      => stripslashes($this->options->alert_no),
-                    'response_no'   => add_query_arg(array($this->short_name . static::RESP_ID => 0)),
-                    'response_ok'   => add_query_arg(array($this->short_name . static::RESP_ID => 1)),
-                    'manual'        => ($this->options->alert_show == 'manual'),
+                $vars = array_merge(
+                    array(
+                        'alert_content' => wpautop($this->options->alert_content),
+                        'response_no'   => add_query_arg(array($this->short_name . static::RESP_ID => 0)),
+                        'response_ok'   => add_query_arg(array($this->short_name . static::RESP_ID => 1)),
+                        'manual'        => ($this->options->alert_show == 'manual'),
+                    ),
+                    $this->options->fetch(array('alert_heading', 'alert_ok', 'alert_no'))
                 );
 
                 $result = $this->template->render('ask.html.twig', $vars);
             } else {
                 // Custom alert
-                $result = stripslashes($this->options->alert_custom_content);
+                $result = $this->options->alert_custom_content;
             }
         }
 
@@ -810,7 +810,7 @@ class Main extends \Pf4wp\WordpressPlugin
 
                 return $this->template->render('cookie_table.html.twig', array(
                     'cookies'       => $cookies,
-                    'required_text' => stripslashes($this->options->required_text),
+                    'required_text' => $this->options->required_text,
                 ));
             }
         }
@@ -895,7 +895,13 @@ class Main extends \Pf4wp\WordpressPlugin
             ),
         );
 
-        $vars = array(
+        $export_options = $this->options->fetch(array(
+            'auto_add_cookies', 'delete_root_cookies', 'php_sessions_required',
+            'alert_show', 'alert_content_type', 'alert_content', 'alert_heading', 'alert_ok', 'alert_no',
+            'alert_custom_content', 'required_text', 'script_header', 'script_footer', 'debug_mode', 'js_wrap',
+        ));
+
+        $vars = array_merge(array(
             'nonce'                 => wp_nonce_field('onSettingsMenu', '_nonce', true, false),
             'submit_button'         => get_submit_button(),
             'plugin_base_url'       => $this->getPluginUrl(),
@@ -904,22 +910,8 @@ class Main extends \Pf4wp\WordpressPlugin
             'plugin_home'           => \Pf4wp\Info\PluginInfo::getInfo(false, $this->getPluginBaseName(), 'PluginURI'),
             'countries'             => $this->getCountries(true),
             'geo_services'          => $geo_services,
-            'auto_add_cookies'      => $this->options->auto_add_cookies,
-            'delete_root_cookies'   => $this->options->delete_root_cookies,
-            'php_sessions_required' => $this->options->php_sessions_required,
-            'alert_show'            => $this->options->alert_show,
-            'alert_content_type'    => $this->options->alert_content_type,
-            'alert_content'         => stripslashes($this->options->alert_content),
-            'alert_heading'         => stripslashes($this->options->alert_heading),
-            'alert_ok'              => stripslashes($this->options->alert_ok),
-            'alert_no'              => stripslashes($this->options->alert_no),
-            'alert_custom_content'  => stripslashes($this->options->alert_custom_content),
-            'required_text'         => stripslashes($this->options->required_text),
-            'script_header'         => stripslashes($this->options->script_header),
-            'script_footer'         => stripslashes($this->options->script_footer),
-            'debug_mode'            => $this->options->debug_mode,
-            'js_wrap'               => $this->options->js_wrap,
-        );
+            'debug_info'            => $this->getDebugInfo(),
+        ), $export_options);
 
         $this->template->display('settings.html.twig', $vars);
     }
