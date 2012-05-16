@@ -61,6 +61,9 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
+= 1.0.9 =
+Fixed: Issues with Twig vendor library, resulting in _Twig_Error_Runtime_ errors.
+
 = 1.0.8 (15 May 2012) =
 __Added:__ Debug mode, to allow for easier fault finding and assist with designing a website.
 __Added:__ URI to remove opt-in or opt-out status (`?cookillian_resp=2`)
