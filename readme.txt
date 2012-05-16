@@ -61,7 +61,8 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.0.9 =
+= 1.0.10 =
+Changed: Updated Pf4wp vendor library, adding debug information in footer
 Fixed: Issues with Twig vendor library, resulting in _Twig_Error_Runtime_ errors.
 
 = 1.0.8 (15 May 2012) =
