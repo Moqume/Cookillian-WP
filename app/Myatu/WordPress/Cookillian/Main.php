@@ -1177,7 +1177,7 @@ class Main extends \Pf4wp\WordpressPlugin
             'maxmind'    => array(
                 'title'     => __('MaxMind', $this->getName()),
                 'checked'   => ($this->options->geo_service == 'maxmind'),
-                'desc'      => __('Use a local <a href="http://www.maxmind.com/" target="_new" title="MaxMind">MaxMind</a> database or Apache module', $this->getName()),
+                'desc'      => __('Use a local <a href="http://www.maxmind.com/" target="_new" title="MaxMind">MaxMind</a> database or Apache module/NginX GeoIP module', $this->getName()),
             ),
 
         );

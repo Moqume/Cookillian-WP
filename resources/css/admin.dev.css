@@ -81,6 +81,11 @@
     background-color: #f9f0f9;
 }
 
+#maxmind_db,
+#maxmind_db_v6 {
+    width: 350px;
+}
+
 #required_text,
 .alert_normal input,
 .alert_normal textarea,

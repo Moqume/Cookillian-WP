@@ -63,32 +63,34 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.0.14 =
-__Added:__ Support for [MaxMind](http://www.maxmind.com) geolocation database or Apache module/NginX GeoIP module
-__Added:__ Option to display an alert if the visitor's country could not be determined
-__Added:__ Option for DNT/Do Not Track browser headers (http://donottrack.us)
-Fixed: Type-check prevented undetermined countries to remain in cache for 24 hours
+= 1.0.15 =
+* __Added:__ Support for [MaxMind](http://www.maxmind.com) geolocation database or Apache module/NginX GeoIP module
+* __Added:__ Option to display an alert if the visitor's country could not be determined
+* __Added:__ Option for DNT/Do Not Track browser headers (http://donottrack.us)
+* Fixed: Type-check prevented undetermined countries to remain in cache for 24 hours
+* Changed: Alert is now only displayed to logged in users in "Debug Mode"
+* Changed: All EC member states are selected by default on new installations
 
 = 1.0.10 (16 May 2012) =
-Changed: Updated Pf4wp vendor library, adding debug information in footer
-Fixed: Issues with Twig vendor library, resulting in _Twig_Error_Runtime_ errors.
+* Changed: Updated Pf4wp vendor library, adding debug information in footer
+* Fixed: Issues with Twig vendor library, resulting in _Twig_Error_Runtime_ errors.
 
 = 1.0.8 (15 May 2012) =
-__Added:__ Debug mode, to allow for easier fault finding and assist with designing a website.
-__Added:__ URI to remove opt-in or opt-out status (`?cookillian_resp=2`)
-Changed: Wrapping of optional JavaScript in `<script>` tags is now optional (enabled by default)
-Fixed: Cookies were not automatically detected for visitors outside of the selected countries
+* __Added:__ Debug mode, to allow for easier fault finding and assist with designing a website.
+* __Added:__ URI to remove opt-in or opt-out status (`?cookillian_resp=2`)
+* Changed: Wrapping of optional JavaScript in `<script>` tags is now optional (enabled by default)
+* Fixed: Cookies were not automatically detected for visitors outside of the selected countries
 
 = 1.0.4 (11 May 2012) =
-Changed: Corrected mistake in Readme title
+* Changed: Corrected mistake in Readme title
 
 = 1.0.3 (9 May 2012) =
-__Added:__ PHP/WordPress filters for opt-in, opt-out and blocked/unblocked cookies status
-Changed: Updated the vendor libraries
+* __Added:__ PHP/WordPress filters for opt-in, opt-out and blocked/unblocked cookies status
+* Changed: Updated the vendor libraries
 
 = 1.0.1 (5 May 2012) =
 
-First Release
+* First Release
 
 == Frequently Asked Questions ==
 

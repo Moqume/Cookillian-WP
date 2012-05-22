@@ -12,9 +12,9 @@ if (cookillian === undefined)
 (function($){
     cookillian = {
         showHideCustomAlert : function() {
-            var alert_content_type = $('input[name="alert_content_type"]:checked'),
-                alert_normal = $('.alert_normal'),
-                alert_custom = $('.alert_custom');
+            var alert_content_type = $('input[name="alert_content_type"]:checked')
+                , alert_normal     = $('.alert_normal')
+                , alert_custom     = $('.alert_custom');
 
             if (!alert_content_type.length)
                 return;
@@ -26,11 +26,21 @@ if (cookillian === undefined)
                 alert_custom.hide();
                 alert_normal.show();
             }
+        },
+
+        showHideMaxMindExtras : function() {
+            var maxmind_settings = $(".maxmind_settings")
+                , geo_checked    = $('input[name="geo_service"]:checked');
+
+            if (!geo_checked.length || !maxmind_settings.length)
+                return;
+
+            maxmind_settings.toggle(geo_checked.val() == 'maxmind');
         }
     }
 
     $(document).ready(function($){
-        var cookie_table = $('.cookie_table');
+        var cookie_table = $(".cookie_table");
 
         /* Resize the blank portion according to the width of the nested table */
         if (cookie_table.length) {
@@ -66,10 +76,11 @@ if (cookillian === undefined)
             return false;
         });
 
-        /* Show or hide Custom Alert */
-        $('input[name="alert_content_type"]').change(cookillian.showHideCustomAlert); cookillian.showHideCustomAlert()
+        /* Show or hide ... */
+        $('input[name="alert_content_type"]').change(cookillian.showHideCustomAlert); cookillian.showHideCustomAlert();
+        $('input[name="geo_service"]').change(cookillian.showHideMaxMindExtras);      cookillian.showHideMaxMindExtras();
 
-        /* Hide/Show debug information */
+        /* Show or hide debug information */
         $('#footer_debug_link').click(function() { $('#footer_debug').toggle(); return false; });
 
     });
