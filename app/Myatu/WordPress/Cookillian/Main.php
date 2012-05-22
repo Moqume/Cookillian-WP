@@ -257,7 +257,6 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     public function getRemoteIP()
     {
-        return '94.192.77.222';
         // CloudFlare
         if (isset($_SERVER['HTTP_CF_CONNECTING_IP']))
             return trim($_SERVER['HTTP_CF_CONNECTING_IP']);
