@@ -4,7 +4,7 @@ Donate link: http://pledgie.com/campaigns/16906
 Tags: cookie, ec, europe, uk, law, directive, filter, block, eu cookie directive
 Requires at least: 3.3
 Tested up to: 3.4-beta3
-Stable tag: 1.0.10
+Stable tag: 1.0.17
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -63,7 +63,7 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.0.17 =
+= 1.0.17 (22 May 2012) =
 * __Added:__ Support for [MaxMind](http://www.maxmind.com) geolocation database or Apache module/NginX GeoIP module
 * __Added:__ Option to display an alert if the visitor's country could not be determined
 * __Added:__ Option for DNT/Do Not Track browser headers (http://donottrack.us)
