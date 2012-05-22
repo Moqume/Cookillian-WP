@@ -38,6 +38,10 @@ class Main extends \Pf4wp\WordpressPlugin
     // Flag to indicate (to JS) whether cookies are blocked
     protected $cookies_blocked;
 
+    // References for MaxMind geolocation
+    protected $maxmind_db;
+    protected $maxmind_db_v6;
+
     // Default options
     protected $default_options = array(
         'geo_service'         => 'geoplugin',
@@ -55,6 +59,7 @@ class Main extends \Pf4wp\WordpressPlugin
         'required_text'       => 'This cookie is required for the operation of this website.',
         'stats'               => array(),
         'js_wrap'             => true,
+        'show_on_unknown_location' => true,
     );
 
     /** -------------- HELPERS -------------- */
@@ -63,7 +68,7 @@ class Main extends \Pf4wp\WordpressPlugin
      * Obtains a list of countries
      *
      * @param bool $mark_selected Adds a 'selected' value to the results, based on countries options
-     * @return array Array containing contries in key/value pairs, whey key is the 2-digit country code and vaue the country name
+     * @return array Array containing contries in key/value pairs, where key is the 2-digit country code and vaue the country name
      */
     protected function getCountries($mark_selected = false)
     {
@@ -130,17 +135,15 @@ class Main extends \Pf4wp\WordpressPlugin
 
         // First attempt to fetch from local NP cache (fastest)
         if (isset($this->np_cache[$cache_id]))
-            return $this->np_cache[$cache_id];
+            return $this->np_cache[$cache_id]; // Note: Will also return on empty results, avoids hammering 3rd party
 
         // Next attempt to fetch from transient cache (2nd fastest)
-        $result = get_site_transient($cache_id);
-
-        if ($result !== false) {
+        if ($result = get_site_transient($cache_id)) {
             $this->np_cache[$cache_id] = $result; // Save to local NP cache
             return $result;
         }
 
-        // Nothing in cache, so start working on it
+        // Nothing in cache or empty result, so start working on it
         switch ($this->options->geo_service) {
             case 'geoplugin' :
                 $remote = wp_remote_get('http://www.geoplugin.net/php.gp?ip=' . $ip);
@@ -159,6 +162,10 @@ class Main extends \Pf4wp\WordpressPlugin
             case 'cloudflare' :
                 $result = isset($_SERVER['HTTP_CF_IPCOUNTRY']) ? $_SERVER['HTTP_CF_IPCOUNTRY'] : '';
                 break;
+
+            case 'maxmind' :
+                $result = $this->getMaxmindCountryCode($ip);
+                break;
         }
 
         // Ensure it's an empty string if no valid country was found (for type check when retrieving the transient)
@@ -166,10 +173,81 @@ class Main extends \Pf4wp\WordpressPlugin
             $result = '';
 
         // Save into caches
-        set_site_transient($cache_id, $result, 3600);   // One day
-        $this->np_cache[$cache_id] = $result;           // Non-persistent
+        set_site_transient($cache_id, $result, 3600); // One day (note: empty results are re-detected ASAP)
+        $this->np_cache[$cache_id] = $result;         // Non-persistent cache, just for the life of this object
 
         return $result;
+    }
+
+    /**
+     * Obtains the country code from a MaxMind database or Apache module
+     *
+     * The preferred method is to use the results from the Apache module or FastCGI
+     * environment (handles 300K - 7.3 Million queries per second vs. 7K per second).
+     *
+     * @since 1.0.13
+     * @param string $ip The IP to return the country for
+     * @return string 2-digit country code or empty if unable to determine
+     */
+    protected function getMaxmindCountryCode($ip)
+    {
+        // First determine if we can use the Apache module (fastest)
+        if ($country = apache_note('GEOIP_COUNTRY_CODE'))
+            return $country;
+
+        // Alternate style (common for FastCGI and NginX installs)
+        if (isset($_SERVER['GEOIP_COUNTRY_CODE']) && ($country = $_SERVER['GEOIP_COUNTRY_CODE']))
+            return $country;
+
+        // Nothing so far, looks like we'll have to get it from a local database ...
+        include_once $this->getPluginDir() . 'vendor/MaxMind/geoip.inc';
+
+        if (strpos($ip, ':') !== false) {
+            // IPv6 lookup
+
+            // We haven't tried to load the database yet
+            if (!isset($this->maxmind_db_v6)) {
+                if (@is_file($this->options->maxmind_db_v6) && @is_readable($this->options->maxmind_db_v6)) {
+                    try
+                    {
+                        /* Note, we use the "Standard" method vs. "Memory" as not everyone has
+                         * gobs of memory allocated to their host (think web hosts vs. dedicated servers)
+                         */
+                        $this->maxmind_db_v6 = geoip_open($this->options->maxmind_db, GEOIP_STANDARD);
+                    }
+                    catch (Exception $e)
+                    {
+                        $this->maxmind_db_v6 = false;
+                    }
+                }
+            }
+
+            // Perform the lookup, provided we have a valid database
+            if ($this->maxmind_db_v6)
+                $country = geoip_country_code_by_addr_v6($this->maxmind_db_v6, $ip);
+        } else {
+            // It's an IPv4 lookup
+            if (!isset($this->maxmind_db)) {
+                if (@is_file($this->options->maxmind_db) && @is_readable($this->options->maxmind_db)) {
+                    try
+                    {
+                        $this->maxmind_db = geoip_open($this->options->maxmind_db, GEOIP_STANDARD);
+                    }
+                    catch (Exception $e)
+                    {
+                        $this->maxmind_db = false;
+                    }
+                }
+            }
+
+            if ($this->maxmind_db)
+                $country = geoip_country_code_by_addr($this->maxmind_db, $ip);
+        }
+
+        if ($country)
+            return $country;
+
+        return ''; // Ensure we always return an empty string if no valid country was found
     }
 
     /**
@@ -215,8 +293,8 @@ class Main extends \Pf4wp\WordpressPlugin
         // We detect unknown cookies first
         $this->detectUnknownCookies();
 
-        // Return as 'true' if we're in debug mode
-        if ($this->options->debug_mode)
+        // Return as 'true' if we're in debug mode and the user is logged in (so it can be tested)
+        if ($this->options->debug_mode && is_user_logged_in())
             return true;
 
         /* Don't handle any cookies if:
@@ -238,9 +316,15 @@ class Main extends \Pf4wp\WordpressPlugin
             // Check where the visitor is from and continue if from one selected in options
             $remote_country = $this->getCountryCode($this->getRemoteIP());
 
-            // We're done if the visitor isn't in one of the selected countries
-            if (!in_array($remote_country, $countries))
-                return false;
+            if ($remote_country) {
+                // We found a country based on the IP address
+                if (!in_array($remote_country, $countries))
+                    return false; // We're done if the visitor isn't in one of the selected countries
+            } else {
+                // We couldn't determine the country
+                if (!$this->options->show_on_unknown_location)
+                    return false; // We're asked not to show the alert if we couldn't determine the country, done!
+            }
         }
 
         // If we reach this point, cookies will be deleted based on their settings.
@@ -387,23 +471,45 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
+     * Returns the DNT/Do Not Track browser header value
+     *
+     * See http://tools.ietf.org/html/draft-mayer-do-not-track-00. If the header
+     * is not present, there is no expressed preference.
+     *
+     * @since 1.0.14
+     * @return string The value specified by the visitor, or empty if no DNT preference expressed
+     */
+    public function getDNT()
+    {
+        if (isset($_SERVER['HTTP_X_DO_NOT_TRACK']))
+            return $_SERVER['HTTP_X_DO_NOT_TRACK'];
+
+        if (isset($_SERVER['HTTP_DNT']))
+            return $_SERVER['HTTP_DNT'];
+
+        return '';
+    }
+
+    /**
      * Returns whether the visitor has opted in
      *
      * @return bool
      */
     public function optedIn()
     {
-        return (Cookies::get($this->short_name . static::OPTIN_ID, false) !== false);
+        return (($this->getDNT() === '0') || (Cookies::get($this->short_name . static::OPTIN_ID, false) !== false));
     }
 
     /**
      * Returns whether the visitor has opted out
      *
+     * Since 1.0.14, also checks for DNT/Do_Not_Track browser headers
+     *
      * @return bool
      */
     public function optedOut()
     {
-        return (Cookies::get($this->short_name . static::OPTOUT_ID, false) !== false);
+        return (($this->getDNT() === '1') || (Cookies::get($this->short_name . static::OPTOUT_ID, false) !== false));
     }
 
     /**
@@ -527,6 +633,108 @@ class Main extends \Pf4wp\WordpressPlugin
         return sprintf("<script type=\"text/javascript\">\r\n/* <![CDATA[ */\r\n%s\r\n/* ]]> */\r\n</script>\r\n", $code);
     }
 
+    /**
+     * Handles a file upload (after WordPress handled it)
+     *
+     * The extra step that's performed here, is if the file is a ZIP file, it will
+     * extract the contents and use a *single* file from it as the uploaded file.
+     *
+     * @param array Array containing return value of wp_handle_upload()
+     * @return array Array containing return values similar to wp_handle_upload()
+     */
+    protected function handleFileUpload($upload)
+    {
+        global $wp_filesystem;
+
+        if (isset($upload['error']))
+            return $upload;
+
+        $ext    = strtolower(pathinfo($upload['file'], PATHINFO_EXTENSION));
+        $result = $upload;
+
+        if ($upload['type'] == 'application/zip' ||
+            $upload['type'] == 'application/x-zip' ||
+            $upload['type'] == 'application/x-zip-compressed' ||
+            $ext = 'zip') {
+            // Compressed upload
+
+            // Initialize the WP File system if need be
+            if (!isset($wp_filesystem) && function_exists('WP_Filesystem'))
+                WP_Filesystem();
+
+            // Create a working directory to extract file(s) to
+            $temp_dir = \Pf4wp\Storage\StoragePath::validate(trailingslashit(realpath(sys_get_temp_dir()))  . 'cookillian_' . substr(md5(time() . rand()), 8), false);
+
+            // If we have a valid working directory and could extract the ZIP file, look at the contents
+            if ($temp_dir && unzip_file($upload['file'], $temp_dir)) {
+                $total_files = 0;
+                $the_file    = '';
+
+                if ($dh = opendir($temp_dir)) {
+                    while (false !== ($file = readdir($dh)) && $total_files < 2) {
+                        if ($file != '.' && $file != '..') {
+                            $total_files++;
+                            $the_file = $file;
+                        }
+                    }
+
+                    closedir($dh);
+                }
+
+                if ($total_files > 2) {
+                    // More than one file extracted, K.I.S.S.
+                    $result = array('error' => 'ZIP contains too many files, don\'t know which one to use.');
+                } if ($total_files == 0) {
+                    // No files extracted, kept it way too simle this time
+                    $result = array('error' => 'ZIP file contains nothing.');
+                } else {
+                    // Aha! We extracted file, let's use that instead
+                    $dir = trailingslashit(dirname($upload['file']));
+
+                    @unlink($upload['file']);
+                    if (@rename($temp_dir . $the_file, $dir . $the_file)) {
+                        $result['file'] = $dir . $the_file;
+                    } else {
+                        $result = array('error' => 'Unable to move extracted file to upload directory.');
+                    }
+                }
+            } else {
+                $result = array('error' => 'Unable to extract the ZIP file.');
+            }
+
+            // Clean up temp dir
+            if ($temp_dir)
+                \Pf4wp\Storage\StoragePath::delete($temp_dir);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Clears transients related to Cookillian
+     */
+    protected function clearTransients()
+    {
+        global $wpdb;
+
+        try
+        {
+            // Site transients are stored under `sitemeta` on multisites
+            if (defined('MULTISITE') && MULTISITE) {
+                $site_transient_location = $wpdb->sitemeta;
+            } else {
+                $site_transient_location = $wpdb->options;
+            }
+
+            return $wpdb->get_results("DELETE FROM `{$site_transient_location}` WHERE `option_name` LIKE '_site_transient%_{$this->short_name}_%'");
+        }
+        catch (Exception $e)
+        {
+            return false;
+        }
+    }
+
+
     /** -------------- EVENTS -------------- */
 
     public function onActivation()
@@ -551,11 +759,54 @@ class Main extends \Pf4wp\WordpressPlugin
             );
         }
 
-        // And pre-fill the countries (United Kingdom)
+        // And pre-fill the countries
         $countries = $this->options->countries;
 
         if (empty($countries))
-            $this->options->countries = array('GB');
+            $this->options->countries = array(
+                'AT', // Austria
+                'BE', // Belgium
+                'BG', // Bulgaria
+                'CY', // Cyprus
+                'CZ', // Czech Republic
+                'DK', // Denmark
+                'EE', // Estonia
+                'FI', // Finland
+                'FR', // France
+                'DE', // Germany
+                'GR', // Greece
+                'HU', // Hungary
+                'IE', // Ireland
+                'IT', // Italy
+                'LV', // Latvia,
+                'LT', // Lithuania
+                'LU', // Luxembourg
+                'MT', // Malta
+                'NL', // Netherlands
+                'PL', // Poland
+                'RO', // Romania
+                'SK', // Slovakia
+                'SI', // Slovenia
+                'ES', // Spain
+                'SE', // Sweden
+                'GB', // United Kingdom
+            );
+    }
+
+    /**
+     * Called when the plugin is de-activated
+     */
+    public function onDeactivation()
+    {
+        $this->clearTransients();
+    }
+
+    /**
+     * Called when the plugin has been upgraded
+     */
+    public function onUpgrade($previous_version, $current_version)
+    {
+        $this->clearTransients();
     }
 
     /**
@@ -679,16 +930,16 @@ class Main extends \Pf4wp\WordpressPlugin
             $blk_country   = (in_array($rem_country, $sel_countries));
 
             $debug_data = array(
-                'Will handle the cookies'   => !($this->optedIn() || (is_admin() && !Helpers::doingAjax()) || is_user_logged_in()),
-                'Is the visitor logged in'  => is_user_logged_in(),
-                'Is Admin (not AJAX)'       => (is_admin() && !Helpers::doingAjax()),
-                'Country list OK'           => !empty($countries),
+                'Will handle the cookies'                   => !($this->optedIn() || (is_admin() && !Helpers::doingAjax()) || is_user_logged_in()),
+                'Is the visitor logged in'                  => is_user_logged_in(),
+                'Is Admin (not AJAX)'                       => (is_admin() && !Helpers::doingAjax()),
+                'Country list OK'                           => !empty($countries),
                 'Detected remote IP address of the visitor' => $detected_ip,
-                '2-letter code of detected country' => $rem_country,
-                'Name of detected country'  => $rem_countryl,
-                'Block cookies for this country' => $blk_country,
-                'Visitor has opted-in'      => $this->optedIn(),
-                'Visitor has opted-out'     => $this->optedOut(),
+                '2-letter code of detected country'         => $rem_country,
+                'Name of detected country'                  => $rem_countryl,
+                'Block cookies for this country'            => $blk_country,
+                'Visitor has opted-in'                      => $this->optedIn(),
+                'Visitor has opted-out'                     => $this->optedOut(),
             );
 
             echo "\n<!-- Cookillian Debug Information:\n";
@@ -818,7 +1069,6 @@ class Main extends \Pf4wp\WordpressPlugin
         return '';
     }
 
-
     /**
      * Give the plugin a menu
      */
@@ -856,7 +1106,7 @@ class Main extends \Pf4wp\WordpressPlugin
                 'auto_add_cookies'      => 'bool',
                 'delete_root_cookies'   => 'bool',
                 'php_sessions_required' => 'bool',
-                'geo_service'           => array('in_array', array('geoplugin','cloudflare')),
+                'geo_service'           => array('in_array', array('geoplugin','cloudflare','maxmind')),
                 'alert_show'            => array('in_array', array('auto', 'manual')),
                 'alert_content_type'    => array('in_array', array('default', 'custom')),
                 'alert_content'         => 'string',
@@ -869,9 +1119,40 @@ class Main extends \Pf4wp\WordpressPlugin
                 'script_footer'         => 'string',
                 'debug_mode'            => 'bool',
                 'js_wrap'               => 'bool',
+                'show_on_unknown_location' => 'bool',
             ));
 
+            // Save country selections
             $this->options->countries = (isset($_POST['countries'])) ? $_POST['countries'] : array();
+
+            // Handle file uploads
+            if (isset($_FILES)) {
+                foreach ($_FILES as $uploaded_file_id => $uploaded_file) {
+                    if (in_array($uploaded_file_id, array('maxmind_db_file', 'maxmind_db_v6_file')) && $uploaded_file['error'] !== UPLOAD_ERR_NO_FILE) {
+                        $handled_file = $this->handleFileUpload(wp_handle_upload($uploaded_file, array('test_form'=>false)));
+
+                        if (isset($handled_file['error'])) {
+                            AdminNotice::add(sprintf(__("The file <strong>%s</strong> could not be saved. %s", $this->getName()), $uploaded_file['name'], $handled_file['error']), true);
+                        } else {
+                            switch ($uploaded_file_id) {
+                                case 'maxmind_db_file' :
+                                    if ($this->options->maxmind_db && ($this->options->maxmind_db !== $handled_file['file']))
+                                        @unlink($this->options->maxmind_db); // File is being replaced, delete old one
+
+                                    $this->options->maxmind_db = $handled_file['file'];
+                                    break;
+
+                                case 'maxmind_db_v6_file' :
+                                    if ($this->options->maxmind_db_v6 && ($this->options->maxmind_db_v6 !== $handled_file['file']))
+                                        @unlink($this->options->maxmind_db_v6);
+
+                                    $this->options->maxmind_db_v6 = $handled_file['file'];
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
 
             AdminNotice::add(__('Settings have been saved', $this->getName()));
         }
@@ -893,12 +1174,19 @@ class Main extends \Pf4wp\WordpressPlugin
                 'checked'   => ($this->options->geo_service == 'cloudflare'),
                 'desc'      => __('If you use <a href="http://www.cloudflare.com/" target="_new" title="CloudFlare">CloudFlare</a>, this will provide you with free and <u>fast</u> access to IP geolocation', $this->getName()),
             ),
+            'maxmind'    => array(
+                'title'     => __('MaxMind', $this->getName()),
+                'checked'   => ($this->options->geo_service == 'maxmind'),
+                'desc'      => __('Use a local <a href="http://www.maxmind.com/" target="_new" title="MaxMind">MaxMind</a> database or Apache module', $this->getName()),
+            ),
+
         );
 
         $export_options = $this->options->fetch(array(
             'auto_add_cookies', 'delete_root_cookies', 'php_sessions_required',
             'alert_show', 'alert_content_type', 'alert_content', 'alert_heading', 'alert_ok', 'alert_no',
-            'alert_custom_content', 'required_text', 'script_header', 'script_footer', 'debug_mode', 'js_wrap',
+            'alert_custom_content', 'required_text', 'script_header', 'script_footer', 'debug_mode',
+            'js_wrap', 'show_on_unknown_location', 'maxmind_db', 'maxmind_db_v6',
         ));
 
         $vars = array_merge(array(

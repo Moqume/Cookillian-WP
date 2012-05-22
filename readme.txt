@@ -33,10 +33,12 @@ With the included statistics, you can see how many visitors have decided to opt 
 * Automatic collection of cookies used by the website
 * Automatic rendering of details about cookies using shortcodes
 * Support for [geoPlugin](http://www.geoplugin.com) geolocation service
-* Support for [CloudFlare](http://www.cloudflare) geolocation HTTP headers
+* Support for [CloudFlare](http://www.cloudflare.com) geolocation HTTP headers
+* Support for [MaxMind](http://www.maxmind.com) geolocation database or Apache module/NginX GeoIP module
 * Exposed PHP/WordPress Filters and JavaScript variables regarding cookie permissions, opt-in and opt-out for complex sites
 * Statistics to track the impact of the EC Directive
 * Debug mode for web development and testing
+* Support for the DNT/Do Not Track browser headers (http://donottrack.us)
 
 == Installation ==
 
@@ -60,6 +62,12 @@ with PHP versions older than 5.3.
 2. Statistics to track compliance impact
 
 == Changelog ==
+
+= 1.0.14 =
+__Added:__ Support for [MaxMind](http://www.maxmind.com) geolocation database or Apache module/NginX GeoIP module
+__Added:__ Option to display an alert if the visitor's country could not be determined
+__Added:__ Option for DNT/Do Not Track browser headers (http://donottrack.us)
+Fixed: Type-check prevented undetermined countries to remain in cache for 24 hours
 
 = 1.0.10 (16 May 2012) =
 Changed: Updated Pf4wp vendor library, adding debug information in footer
