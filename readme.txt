@@ -4,7 +4,7 @@ Donate link: http://pledgie.com/campaigns/16906
 Tags: cookie, ec, europe, uk, law, directive, filter, block, eu cookie directive
 Requires at least: 3.3
 Tested up to: 3.4-beta3
-Stable tag: 1.0.17
+Stable tag: 1.0.17.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -62,6 +62,9 @@ with PHP versions older than 5.3.
 2. Statistics to track compliance impact
 
 == Changelog ==
+
+= 1.0.17.1 (22 May 2012) =
+* Fixed: Fixed bug that caused the plugin from operating on certain systems
 
 = 1.0.17 (22 May 2012) =
 * __Added:__ Support for [MaxMind](http://www.maxmind.com) geolocation database or Apache module/NginX GeoIP module
@@ -158,16 +161,17 @@ array (
 -->`
 
 In order of appearance the above means that:
+
 1. Cookillian will handle cookies because the visitor has not specifically opted-in,
-2. The visitor was also not logged in,
-3. Nor was it an non-AJAX call. Cookillian,
-4. The countries database was not corrupted,
-5. The IP address of the user was 127.0.0.1,
-6. The 2-letter country code could not be determined,
-7. The full name of the country was unknown,
-8. Based on the visitor's location, cookies are not blocked by default,
-9. The visitor has not specifically opted in, and
-10. The visitor has not specifically opted out.
+1. The visitor was also not logged in,
+1. Nor was it an non-AJAX call. Cookillian,
+1. The countries database was not corrupted,
+1. The IP address of the user was 127.0.0.1,
+1. The 2-letter country code could not be determined,
+1. The full name of the country was unknown,
+1. Based on the visitor's location, cookies are not blocked by default,
+1. The visitor has not specifically opted in, and
+1. The visitor has not specifically opted out.
 
 If browser supports a privacy setting such as "Do not track my activity" [(see donotrack.us)](http://donottrack.us), then Cookillian will consider the visitor to have opted out if this setting is active. In such instances, Cookillian will not check what country the visitor is located in or show the alert.
 
