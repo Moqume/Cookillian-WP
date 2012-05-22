@@ -5,6 +5,10 @@
     file that was distributed with this source code.
 #}
 
+<div class="ip-info">
+    {{ __('Your current location, based on IP') }} <strong>{{ current_ip }}</strong>, {{ __('is') }} <strong>{{ current_location }}</strong>.
+</div>
+
 <div style="position: relative; width: 100%;"> {# REL DIV #}
     <form method="post" action="" id="settings_form" enctype="multipart/form-data">
         {{ nonce | raw }}
@@ -29,14 +33,16 @@
                     </th>
                     <td>
                         {% for geo_service_name, geo_service_value in geo_services %}
-                        <label>
-                            <input type="radio" name="geo_service" value="{{ geo_service_name }}"{% if geo_service_value.checked %}checked="checked"{% endif %} />
-                            {{ geo_service_value.title }}
-                        </label>
-                        <span class="description">{{ geo_service_value.desc | raw }}</span>
-                        {% if not loop.last %}
-                        <br />
-                        {% endif %}
+                        <p>
+                            <label>
+                                <input type="radio" name="geo_service" value="{{ geo_service_name }}"{% if geo_service_value.checked %}checked="checked"{% endif %} />
+                                {{ geo_service_value.title }}
+                            </label>
+                            <span class="description">{{ geo_service_value.desc | raw }}</span>
+                            {% if has_geo_data == geo_service_name %}
+                                <strong>(Detected)</strong>
+                            {% endif %}
+                        </p>
                         {% endfor %}
                     </td>
                 </tr>

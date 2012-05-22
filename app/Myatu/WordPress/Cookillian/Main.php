@@ -150,7 +150,7 @@ class Main extends \Pf4wp\WordpressPlugin
 
                 if (!is_wp_error($remote)) {
                     try {
-                        $r = @unserialize($remote[body]);
+                        $r = @unserialize($remote['body']);
 
                         $result = isset($r['geoplugin_countryCode']) ? $r['geoplugin_countryCode'] : '';
                     } catch (\Exception $e) {
@@ -215,7 +215,7 @@ class Main extends \Pf4wp\WordpressPlugin
                          */
                         $this->maxmind_db_v6 = geoip_open($this->options->maxmind_db, GEOIP_STANDARD);
                     }
-                    catch (Exception $e)
+                    catch (\Exception $e)
                     {
                         $this->maxmind_db_v6 = false;
                     }
@@ -233,7 +233,7 @@ class Main extends \Pf4wp\WordpressPlugin
                     {
                         $this->maxmind_db = geoip_open($this->options->maxmind_db, GEOIP_STANDARD);
                     }
-                    catch (Exception $e)
+                    catch (\Exception $e)
                     {
                         $this->maxmind_db = false;
                     }
@@ -257,6 +257,7 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     public function getRemoteIP()
     {
+        return '94.192.77.222';
         // CloudFlare
         if (isset($_SERVER['HTTP_CF_CONNECTING_IP']))
             return trim($_SERVER['HTTP_CF_CONNECTING_IP']);
@@ -728,10 +729,26 @@ class Main extends \Pf4wp\WordpressPlugin
 
             return $wpdb->get_results("DELETE FROM `{$site_transient_location}` WHERE `option_name` LIKE '_site_transient%_{$this->short_name}_%'");
         }
-        catch (Exception $e)
+        catch (\Exception $e)
         {
             return false;
         }
+    }
+
+    /**
+     * Determine if existing Geolocation information is available
+     *
+     * @return string|bool Returns a string of a known geolocation provider if data is available, false otherwise
+     */
+    protected function hasGeoData()
+    {
+        if (apache_note('GEOIP_COUNTRY_CODE') !== false || isset($_SERVER['GEOIP_COUNTRY_CODE']))
+            return 'maxmind';
+
+        if (isset($_SERVER['HTTP_CF_IPCOUNTRY']))
+            return 'cloudflare';
+
+        return false;
     }
 
 
@@ -1120,6 +1137,8 @@ class Main extends \Pf4wp\WordpressPlugin
                 'debug_mode'            => 'bool',
                 'js_wrap'               => 'bool',
                 'show_on_unknown_location' => 'bool',
+                'maxmind_db'            => 'string', // Note, this will be overriden with file uploads
+                'maxmind_db_v6'         => 'string',
             ));
 
             // Save country selections
@@ -1156,6 +1175,31 @@ class Main extends \Pf4wp\WordpressPlugin
 
             AdminNotice::add(__('Settings have been saved', $this->getName()));
         }
+
+        // Additional warning for CloudFlare
+        if ($this->options->geo_service == 'cloudflare' && !(isset($_SERVER['HTTP_CF_IPCOUNTRY'])))
+            AdminNotice::add(__('<strong>Warning!</strong> No CloudFlare Geolocation data detected.', $this->getName()), true);
+
+        // Additional warning for MaxMind
+        if ($this->options->geo_service == 'maxmind' && !($this->hasGeoData() == 'maxmind')) {
+            $default_warning = __('<strong>Warning!</strong> MaxMind Apache Module or Nginx GeoIP Module not detected', $this->getName());
+            $warning         = '';
+
+            if (!$this->options->maxmind_db) {
+                $warning = $default_warning . __(', and no IPv4 database specified. No IPv4 geolocation can be performed!', $this->getName());
+            } elseif (!(@is_file($this->options->maxmind_db) && @is_readable($this->options->maxmind_db))) {
+                $warning = $default_warning . __(', and IPv4 database could not be accessed. No IPv4 geolocation can be performed!', $this->getName());
+            }
+
+            if (!$this->options->maxmind_db_v6) {
+                $warning = $default_warning . __(', and no IPv6 database specified. No IPv6 geolocation can be performed!', $this->getName());
+            } elseif (!(@is_file($this->options->maxmind_db_v6) && @is_readable($this->options->maxmind_db_v6))) {
+                $warning = $default_warning . __(', and IPv6 database could not be accessed. No IPv4 geolocation can be performed!', $this->getName());
+            }
+
+            if ($warning)
+                AdminNotice::add($warning, true);
+        }
     }
 
     /**
@@ -1167,20 +1211,24 @@ class Main extends \Pf4wp\WordpressPlugin
             'geoplugin' => array(
                 'title'     => __('geoPlugin', $this->getName()),
                 'checked'   => ($this->options->geo_service == 'geoplugin'),
-                'desc'      => __('This service is provided free of charge by <a href="http://www.geoplugin.com/" target="_new" title="geoPlugin for IP geolocation">geoPlugin</a>', $this->getName()),
+                'desc'      => __('This service is provided free of charge by <a href="http://www.geoplugin.com/" target="_blank" title="geoPlugin for IP geolocation">geoPlugin</a>', $this->getName()),
             ),
             'cloudflare'    => array(
                 'title'     => __('CloudFlare', $this->getName()),
                 'checked'   => ($this->options->geo_service == 'cloudflare'),
-                'desc'      => __('If you use <a href="http://www.cloudflare.com/" target="_new" title="CloudFlare">CloudFlare</a>, this will provide you with free and <u>fast</u> access to IP geolocation', $this->getName()),
+                'desc'      => __('If you use <a href="http://www.cloudflare.com/" target="_blank" title="CloudFlare">CloudFlare</a>, this will provide you with free and <u>fast</u> access to IP geolocation', $this->getName()),
             ),
             'maxmind'    => array(
                 'title'     => __('MaxMind', $this->getName()),
                 'checked'   => ($this->options->geo_service == 'maxmind'),
-                'desc'      => __('Use a local <a href="http://www.maxmind.com/" target="_new" title="MaxMind">MaxMind</a> database or Apache module/NginX GeoIP module', $this->getName()),
+                'desc'      => __('Use a local <a href="http://www.maxmind.com/" target="_blank" title="MaxMind">MaxMind</a> database or Apache module/NginX GeoIP module', $this->getName()),
             ),
-
         );
+
+        $rem_ip      = $this->getRemoteIP();
+        $countries   = $this->getCountries();
+        $rem_country = $this->getCountryCode($rem_ip);
+        $country     = isset($countries[$rem_country]) ? $countries[$rem_country]['country'] : 'Unknown';
 
         $export_options = $this->options->fetch(array(
             'auto_add_cookies', 'delete_root_cookies', 'php_sessions_required',
@@ -1199,6 +1247,9 @@ class Main extends \Pf4wp\WordpressPlugin
             'countries'             => $this->getCountries(true),
             'geo_services'          => $geo_services,
             'debug_info'            => $this->getDebugInfo(),
+            'has_geo_data'          => $this->hasGeoData(),
+            'current_ip'            => $rem_ip,
+            'current_location'      => $country,
         ), $export_options);
 
         $this->template->display('settings.html.twig', $vars);

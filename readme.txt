@@ -1,7 +1,7 @@
 === Cookillian ===
 Contributors: Myatu
 Donate link: http://pledgie.com/campaigns/16906
-Tags: cookie, eu, ec, europe, uk, law, directive, filter, block
+Tags: cookie, ec, europe, uk, law, directive, filter, block, eu cookie directive
 Requires at least: 3.3
 Tested up to: 3.4-beta3
 Stable tag: 1.0.10
@@ -63,11 +63,12 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.0.15 =
+= 1.0.17 =
 * __Added:__ Support for [MaxMind](http://www.maxmind.com) geolocation database or Apache module/NginX GeoIP module
 * __Added:__ Option to display an alert if the visitor's country could not be determined
 * __Added:__ Option for DNT/Do Not Track browser headers (http://donottrack.us)
 * Fixed: Type-check prevented undetermined countries to remain in cache for 24 hours
+* Fixed: IP geolocation data for geoPlugin was incorrectly unserialized
 * Changed: Alert is now only displayed to logged in users in "Debug Mode"
 * Changed: All EC member states are selected by default on new installations
 
@@ -96,7 +97,7 @@ with PHP versions older than 5.3.
 
 = Help, it's broken! What do I do now? =
 
-If something does not appear to be working as it should, [search the forum](http://wordpress.org/tags/cookillian) or [write a new topic](http://wordpress.org/tags/cookillian#postform) that describes the problem(s) you are experiencing.
+If something does not appear to be working as it should, [search the support forum](http://wordpress.org/support/plugin/cookillian) or write a new topic that describes the problem(s) you are experiencing. I will do my best to provide a solution as soon as possible.
 
 = I have a PHP version older than 5.3, can I make it work? =
 
@@ -116,3 +117,75 @@ If you are using a web hosting provider, then you need to contact the provider r
 * GoDaddy 4GH Hosting: Visit GoDaddy's __Hosting Control Center__ -> __Content__ -> __Programming Languages__
 * HostGator: Add `Action application/x-hg-php53 /cgi-sys/php53` and `AddHandler application/x-hg-php53 .php` to the `.htaccess` file
 * Bluehost: Add `AddHandler application/x-httpd-php53 .php` to the `.htaccess` file (Note: may require a support request/ticket to enable PHP 5.3)
+
+= Will this plugin make my website entirely compliant? =
+
+The plugin is to assist with compliance, but it may not be a full-stop solution.
+
+For example, this plugin will stop WordPress and any other WordPress plugins you've installed from setting a cookie. But, if there's Javascript used on your website, they may still set cookies that are beyond the control of Cookillian. Google Analytics is probably the most common one, but other things like _Share on Facebook_ or _Share on Twitter_ buttons could set their own cookies.
+
+That's why there's the option within the plugin to include JavaScript in the header/footer if the visitor has agreed to receiving cookies - you'd need to remove that JavaScript from your website, and add it to the plugin option instead.
+
+Cookillian will also list which cookies it has detected (including ones set by JavaScript). There are also extensions for browsers that will help you see which cookies have managed to get past Cookillian. Google Chrome users can use the _Developer Tools_ from the Menu bar as well.
+
+If you have any cookie that are required for your website to operate, ie., a cookie that stores products placed in a shopping cart, you can set these in the plugin's __Cookies__ page as well.
+
+= The alert has disappeared after I clicked "No", how do I get it back? =
+
+You can reset your preference by adding `?cookillian_resp=2` to any URL of your website, such as `www.example.co.uk/?cookillian_resp=2`. Naturally, you can add this as a link on, for example, the Privacy Policy page to make it easier for visitors.
+
+= How do I know if it is working? =
+
+On the __Settings__ page, under the heading __Advanced Options__ near the bottom, you have the option to enable _Debug Mode_. For logged-in users, this will cause the alert to be displayed at all times, which allows you to see where it will be located. In all instances, it will also include debug information in the HTML source (use the browser's _View Source_ function), which provides details whether the alert would be shown and why.
+
+= The alert is not displaying at all, help! =
+
+A quick way to troubleshoot this is to enable the _Debug Mode_ as described above. The web page's HTML source (use the browser's _View Source_ function) should display debug details near the bottom, as in this example:
+
+`<!-- Cookillian Debug Information:
+array (
+  'Will handle the cookies' => true,
+  'Is the visitor logged in' => false,
+  'Is Admin (not AJAX)' => false,
+  'Country list OK' => true,
+  'Detected remote IP address of the visitor' => '127.0.0.1',
+  '2-letter code of detected country' => '',
+  'Name of detected country' => 'Unknown',
+  'Block cookies for this country' => false,
+  'Visitor has opted-in' => false,
+  'Visitor has opted-out' => false,
+)
+-->`
+
+In order of appearance the above means that:
+1. Cookillian will handle cookies because the visitor has not specifically opted-in,
+2. The visitor was also not logged in,
+3. Nor was it an non-AJAX call. Cookillian,
+4. The countries database was not corrupted,
+5. The IP address of the user was 127.0.0.1,
+6. The 2-letter country code could not be determined,
+7. The full name of the country was unknown,
+8. Based on the visitor's location, cookies are not blocked by default,
+9. The visitor has not specifically opted in, and
+10. The visitor has not specifically opted out.
+
+If browser supports a privacy setting such as "Do not track my activity" [(see donotrack.us)](http://donottrack.us), then Cookillian will consider the visitor to have opted out if this setting is active. In such instances, Cookillian will not check what country the visitor is located in or show the alert.
+
+If these details are not to be found in the HTML source, a common issue is that the `wp_footer()` function is missing from the WordPress theme. Check the theme's `footer.php` file and verify it contains `<?php wp_footer(); ?>`, and if not, add it.
+
+= How do I change where the alert is displayed? =
+
+First you need to set __Show Alert__ to _Manually_ on the __Settings__ page. In its simplest form, you can use a WordPress shortcode `[cookillian alert]` in a post or page, which will be replaced by the alert if neccesary.
+
+For slightly more complex use, you insert `<?php echo apply_filters('cookillian_alert', ''); ?>` in the desired location of your theme. _Note: `apply_filters()` has a lower overhead than `do_shortcode()`, though both are supported_
+
+= How do I change the appearance of the alert? =
+
+You can use your own CSS styling through your WordPress theme. The alert is wrapped in a `.cookillian-alert` class, providing the background and border colors. The alert heading is in an `.alert-heading` class and the Yes and No buttons in `.btn-ok` and `.btn-no` respectively. If your CSS styling does not appear, you may need to add `!important` to your styling.
+
+= When I click on "Privacy Policy", nothing happened =
+
+On the __Settings__ page, you will need to modify the __Alert Text__ by replacing the hash sign (#) within the `<a href="#">` HTML tags to the actual URL of your Privacy Policy (and the "More Information" link).
+
+
+

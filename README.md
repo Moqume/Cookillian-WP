@@ -26,8 +26,10 @@ Features
 * Automatic rendering of details about cookies using shortcodes
 * Support for [geoPlugin](http://www.geoplugin.com) geoloction service
 * Support for [CloudFlare](http://www.cloudflare) geolocation HTTP headers
+* Support for [MaxMind](http://www.maxmind.com) geolocation database or Apache module/NginX GeoIP module
 * Exposed JavaScript variables regarding cookie permissions, opt-in and opt-out for complex sites
 * Statistics to track the impact of the EC Directive
+* Support for the DNT/Do Not Track browser headers (http://donottrack.us)
 
 License
 -------

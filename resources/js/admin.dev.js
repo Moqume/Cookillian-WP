@@ -28,11 +28,11 @@ if (cookillian === undefined)
             }
         },
 
-        showHideMaxMindExtras : function() {
-            var maxmind_settings = $(".maxmind_settings")
-                , geo_checked    = $('input[name="geo_service"]:checked');
+        showHideExtras : function() {
+            var maxmind_settings    = $(".maxmind_settings")
+                , geo_checked       = $('input[name="geo_service"]:checked');
 
-            if (!geo_checked.length || !maxmind_settings.length)
+            if (!geo_checked.length)
                 return;
 
             maxmind_settings.toggle(geo_checked.val() == 'maxmind');
@@ -78,7 +78,7 @@ if (cookillian === undefined)
 
         /* Show or hide ... */
         $('input[name="alert_content_type"]').change(cookillian.showHideCustomAlert); cookillian.showHideCustomAlert();
-        $('input[name="geo_service"]').change(cookillian.showHideMaxMindExtras);      cookillian.showHideMaxMindExtras();
+        $('input[name="geo_service"]').change(cookillian.showHideExtras);             cookillian.showHideExtras();
 
         /* Show or hide debug information */
         $('#footer_debug_link').click(function() { $('#footer_debug').toggle(); return false; });
