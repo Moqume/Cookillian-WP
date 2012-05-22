@@ -192,7 +192,7 @@ class Main extends \Pf4wp\WordpressPlugin
     protected function getMaxmindCountryCode($ip)
     {
         // First determine if we can use the Apache module (fastest)
-        if ($country = apache_note('GEOIP_COUNTRY_CODE'))
+        if (is_callable('apache_note') && ($country = apache_note('GEOIP_COUNTRY_CODE')))
             return $country;
 
         // Alternate style (common for FastCGI and NginX installs)
@@ -741,7 +741,7 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     protected function hasGeoData()
     {
-        if (apache_note('GEOIP_COUNTRY_CODE') !== false || isset($_SERVER['GEOIP_COUNTRY_CODE']))
+        if ((is_callable('apache_note') && apache_note('GEOIP_COUNTRY_CODE') !== false) || isset($_SERVER['GEOIP_COUNTRY_CODE']))
             return 'maxmind';
 
         if (isset($_SERVER['HTTP_CF_IPCOUNTRY']))
