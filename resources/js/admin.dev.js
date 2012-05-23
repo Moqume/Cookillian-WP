@@ -36,6 +36,26 @@ if (cookillian === undefined)
                 return;
 
             maxmind_settings.toggle(geo_checked.val() == 'maxmind');
+        },
+
+        initCookieDeleteButtons : function() {
+            var delete_buttons = $(".cookie_table .delete-btn")
+                , row;
+
+            if (!delete_buttons.length)
+                return;
+
+            delete_buttons.click(function(e) {
+                console.log("Click!");
+                row = $("#" + $(this).attr("data-row"));
+
+                if (row.length) {
+                    $(".delete-cb", row).prop("checked", true);
+                    row.fadeOut("slow");
+                }
+
+                e.preventDefault();
+            });
         }
     }
 
@@ -69,7 +89,7 @@ if (cookillian === undefined)
             var rand_name = 'new_' + Math.floor((Math.random()*99999));
 
             // Add new table row
-            $('<tr class="new_cookie" style="display:none;"><td class="col_name"><input type="text" value="" name="known_cookies[' + rand_name + '][name]" placeholder="Enter the cookie name here"/></td><td class="col_desc"><textarea name="known_cookies[' + rand_name + '][desc]"></textarea></td><td class="col_group"><input type="text" value="" name="known_cookies[' + rand_name + '][group]" /></td><td class="col_req"><input type="checkbox" name="known_cookies[' + rand_name + '][required]" /></td><td class="col_del"><input type="checkbox" name="known_cookies[' + rand_name + '][delete]" /></td></tr>').prependTo($('table tbody', cookie_table)).fadeIn('slow');
+            $('<tr id="row_' + rand_name + '" class="new_cookie" style="display:none;"><td class="col_name"><input type="text" value="" name="known_cookies[' + rand_name + '][name]" placeholder="Enter the cookie name here"/></td><td class="col_desc"><textarea name="known_cookies[' + rand_name + '][desc]"></textarea></td><td class="col_group"><input type="text" value="" name="known_cookies[' + rand_name + '][group]" /></td><td class="col_req"><input type="checkbox" name="known_cookies[' + rand_name + '][required]" /></td><td class="col_del"><td></td></tr>').prependTo($('table tbody', cookie_table)).fadeIn('slow');
 
             // Focus it
             $('input:first', cookie_table).focus();
@@ -83,5 +103,7 @@ if (cookillian === undefined)
         /* Show or hide debug information */
         $('#footer_debug_link').click(function() { $('#footer_debug').toggle(); return false; });
 
+        /* Additional inits */
+        cookillian.initCookieDeleteButtons();
     });
 })(jQuery);

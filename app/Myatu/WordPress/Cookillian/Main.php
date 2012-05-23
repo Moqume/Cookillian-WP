@@ -758,7 +758,7 @@ class Main extends \Pf4wp\WordpressPlugin
         // Pre-fill the 'Known Cookies' with those created by WordPress
         $known_cookies = $this->options->known_cookies;
 
-        if (empty($known_cookie)) {
+        if (empty($known_cookies)) {
             $this->options->known_cookies = array(
                 'wordpress_*' => array(
                     'desc'  => 'This cookie stores WordPress authentication details.',
@@ -888,7 +888,7 @@ class Main extends \Pf4wp\WordpressPlugin
     {
         // JavaScript exposing whether cookies have been blocked and whether the visitor has opted out or in
         echo $this->jsBlock(sprintf("var cookillian = {\"blocked_cookies\":%s,\"opted_out\":%s,\"opted_in\":%s,\"_manual\":%s};",
-            ($this->cookies_blocked && !$this->options->debug_mode) ? 'true' : 'false',
+            ($this->cookies_blocked) ? 'true' : 'false',
             ($this->optedOut()) ? 'true' : 'false',
             ($this->optedIn()) ? 'true' : 'false',
             ($this->options->alert_show == 'manual') ? 'true' : 'false'
@@ -974,7 +974,7 @@ class Main extends \Pf4wp\WordpressPlugin
     {
         $result = $original;
 
-        // If cookies are found to be blocked and we haven't specifically opted out, or in debug mode, we show an alert
+        // If cookies are found to be blocked and we haven't specifically opted out, we show an alert
         if ($this->cookies_blocked && !$this->optedOut()) {
             $this->addStat('displayed');
 
@@ -1307,10 +1307,11 @@ class Main extends \Pf4wp\WordpressPlugin
 
         $vars = array(
             'nonce'              => wp_nonce_field('onCookiesMenu', '_nonce', true, false),
-            'submit_button'      => get_submit_button(),
+            'submit_button'      => get_submit_button(null, 'primary', 'submit', false),
             'known_cookies'      => $known_cookies,
             'known_cookie_count' => count($known_cookies),
             'is_rtl'             => is_rtl(),
+            'action_url'         => add_query_arg(array()),
         );
 
         $this->template->display('cookies.html.twig', $vars);

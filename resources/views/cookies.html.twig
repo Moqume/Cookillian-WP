@@ -6,7 +6,7 @@
 #}
 
 <div style="position: relative; width: 100%;"> {# REL DIV #}
-    <form method="post" action="" id="cookies_form">
+    <form method="post" action="{{ action_url }}" id="cookies_form">
         {{ nonce | raw }}
 
         <div class="tablenav top">
@@ -26,7 +26,7 @@
                     <th scope="col" class="col_desc">{{ __('Description') }}</th>
                     <th scope="col" class="col_group">{{ __('Group') }}</th>
                     <th scope="col" class="col_req">{{ __('Required') }}</th>
-                    <th scope="col" class="col_del">{{ __('Delete') }}</th>
+                    <th scope="col" class="col_del">{{ __('Remove') }}</th>
                     {% if not is_rtl %}<th scope="col" class="col_blank">&nbsp;</th>{% endif %}
                 </tr>
             </thead>
@@ -36,7 +36,7 @@
                         <table class="widefat" style="border:0;">
                             <tbody>
                                 {% for cookie_name,cookie_value in known_cookies %}
-                                <tr>
+                                <tr id="row{{ loop.index }}">
                                     <td class="col_name">
                                         <input type="text" value="{{ cookie_name }}" name="known_cookies[{{ cookie_name }}][name]" placeholder="Enter the cookie name here" />
                                     </td>
@@ -50,7 +50,8 @@
                                         <input type="checkbox" name="known_cookies[{{ cookie_name }}][required]" {% if cookie_value.required %}checked="checked"{% endif %} />
                                     </td>
                                     <td class="col_del">
-                                        <input type="checkbox" name="known_cookies[{{ cookie_name }}][delete]" />
+                                        <input  type="checkbox" class="delete-cb hide-if-js" name="known_cookies[{{ cookie_name }}][delete]" />
+                                        <button class="delete-btn button-secondary hide-if-no-js" data-row="row{{ loop.index }}" title="{{ __('Click to remove the cookie from this list, save changes to make the removal permanent') }}">{{ __('Remove') }}</button>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -62,7 +63,9 @@
             </tbody>
         </table>
 
-        {{ submit_button | raw }}
+        <div class="alignleft actions" style="margin-top: 30px;">
+            {{ submit_button | raw }} <a href="{{ action_url }}" class="button-secondary action">{{ __('Cancel Changes') }}</a>
+        </div>
 
     </form>
 </div> {# REL DIV #}
