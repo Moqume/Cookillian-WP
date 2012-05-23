@@ -63,9 +63,10 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.0.20 =
+= 1.0.21 =
 * Fixed: Fixed a bug that overwrote existing cookies from the __Cookies__ listing
 * Fixed: Added a method for avoiding cached reloads of the visiting page, after a visitor answered the alert, to avoid alert from showing again
+* Fixed: Empty country name on "Unknown" country in statistics
 * Changed: On JavaScript-enabled browsers, the _Delete_ box has been replaced by a _Remove_ button in the __Cookies__ listing
 
 = 1.0.17.1 (22 May 2012) =
