@@ -44,9 +44,13 @@
                     {% set total_display = total_display + country_stat.0 %}
                     {% set total_optin   = total_optin   + country_stat.1 %}
                     {% set total_optout  = total_optout  + country_stat.2 %}
+                    {% set country_name  = countries[country_abbr].country %}
+                    {% if country_name is empty %}
+                        {% set country_name = 'Unknown' %}
+                    {% endif %}
 
                     <tr>
-                        <td>{{ countries[country_abbr].country }}</td>
+                        <td>{{ country_name }}</td>
                         <td>{{ country_stat.0 }}</td>
                         <td>{{ country_stat.1 }}</td>
                         <td>{{ country_stat.2 }}</td>

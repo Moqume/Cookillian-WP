@@ -565,7 +565,7 @@ class Main extends \Pf4wp\WordpressPlugin
                 break;
         }
 
-        // Return the updated stats back to where they belong
+        // Return thde updated stats back to where they belong
         $stats[$year][$month][$remote_country] = $country_stats;
 
         // And save
@@ -578,6 +578,11 @@ class Main extends \Pf4wp\WordpressPlugin
     public function processResponse($answer)
     {
         $opt_in_or_out = '';
+        $redir_url     = add_query_arg(array(
+            '__r' => substr(md5(time() . rand()), 0, 8),
+            $this->short_name . static::RESP_ID => false,
+
+        ));
 
         switch ($answer) {
             case 2 :
@@ -586,7 +591,7 @@ class Main extends \Pf4wp\WordpressPlugin
                 setcookie($this->short_name . static::OPTOUT_ID, '', time() - 3600, '/');
 
                 // Send the visitor back now
-                if (isset($_SERVER['HTTP_REFERER'])) { wp_redirect($_SERVER['HTTP_REFERER']); die(); }
+                wp_redirect($redir_url); die();
 
                 break;
 
@@ -611,7 +616,7 @@ class Main extends \Pf4wp\WordpressPlugin
         Cookies::set($opt_in_or_out, 1, strtotime(static::COOKIE_LIFE), true, false, '/');
 
         // And send the visitor back to where they were, if possible
-        if (isset($_SERVER['HTTP_REFERER'])) { wp_redirect($_SERVER['HTTP_REFERER']); die(); }
+        wp_redirect($redir_url); die();
     }
 
     /**
@@ -663,7 +668,7 @@ class Main extends \Pf4wp\WordpressPlugin
                 WP_Filesystem();
 
             // Create a working directory to extract file(s) to
-            $temp_dir = \Pf4wp\Storage\StoragePath::validate(trailingslashit(realpath(sys_get_temp_dir()))  . 'cookillian_' . substr(md5(time() . rand()), 8), false);
+            $temp_dir = \Pf4wp\Storage\StoragePath::validate(trailingslashit(realpath(sys_get_temp_dir()))  . 'cookillian_' . substr(md5(time() . rand()), 0, 8), false);
 
             // If we have a valid working directory and could extract the ZIP file, look at the contents
             if ($temp_dir && unzip_file($upload['file'], $temp_dir)) {
@@ -1336,8 +1341,8 @@ class Main extends \Pf4wp\WordpressPlugin
 
         $vars = array(
             'year'      => $year,
-            'years'     => $years,
-            'stats'     => $stats[$year],
+            'years'     => (!empty($years)) ? $years : array($year),
+            'stats'     => (isset($stats[$year])) ? $stats[$year] : array(),
             'countries' => $this->getCountries(),
         );
 
