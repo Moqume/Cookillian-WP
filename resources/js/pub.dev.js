@@ -11,8 +11,6 @@ if (typeof cookillian === "undefined") {
 }
 
 (function($){
-    "use strict";
-
     $.extend(cookillian, {
         /**
          * This is a simple wrapper for calling an Ajax function and obtaining its response
