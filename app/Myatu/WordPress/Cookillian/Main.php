@@ -21,8 +21,6 @@ class Main extends \Pf4wp\WordpressPlugin
     const RESP_ID     = '_resp';
     const COOKIE_LIFE = '+3 years';
 
-    public $short_name = 'cookillian';
-
     // Non-persistent cache
     protected $np_cache = array();
 
@@ -35,6 +33,10 @@ class Main extends \Pf4wp\WordpressPlugin
         'Speedy Spider','StackRambler','yacybot'
     );
 
+    // Country code -> Continent match up
+    protected $country_codes   = array("AP","EU","AD","AE","AF","AG","AI","AL","AM","CW","AO","AQ","AR","AS","AT","AU","AW","AZ","BA","BB","BD","BE","BF","BG","BH","BI","BJ","BM","BN","BO","BR","BS","BT","BV","BW","BY","BZ","CA","CC","CD","CF","CG","CH","CI","CK","CL","CM","CN","CO","CR","CU","CV","CX","CY","CZ","DE","DJ","DK","DM","DO","DZ","EC","EE","EG","EH","ER","ES","ET","FI","FJ","FK","FM","FO","FR","SX","GA","GB","GD","GE","GF","GH","GI","GL","GM","GN","GP","GQ","GR","GS","GT","GU","GW","GY","HK","HM","HN","HR","HT","HU","ID","IE","IL","IN","IO","IQ","IR","IS","IT","JM","JO","JP","KE","KG","KH","KI","KM","KN","KP","KR","KW","KY","KZ","LA","LB","LC","LI","LK","LR","LS","LT","LU","LV","LY","MA","MC","MD","MG","MH","MK","ML","MM","MN","MO","MP","MQ","MR","MS","MT","MU","MV","MW","MX","MY","MZ","NA","NC","NE","NF","NG","NI","NL","NO","NP","NR","NU","NZ","OM","PA","PE","PF","PG","PH","PK","PL","PM","PN","PR","PS","PT","PW","PY","QA","RE","RO","RU","RW","SA","SB","SC","SD","SE","SG","SH","SI","SJ","SK","SL","SM","SN","SO","SR","ST","SV","SY","SZ","TC","TD","TF","TG","TH","TJ","TK","TM","TN","TO","TL","TR","TT","TV","TW","TZ","UA","UG","UM","US","UY","UZ","VA","VC","VE","VG","VI","VN","VU","WF","WS","YE","YT","RS","ZA","ZM","ME","ZW","A1","A2","O1","AX","GG","IM","JE","BL","MF","BQ");
+    protected $continent_codes = array("AS","EU","EU","AS","AS","NA","NA","EU","AS","NA","AF","AN","SA","OC","EU","OC","NA","AS","EU","NA","AS","EU","AF","EU","AS","AF","AF","NA","AS","SA","SA","NA","AS","AN","AF","EU","NA","NA","AS","AF","AF","AF","EU","AF","OC","SA","AF","AS","SA","NA","NA","AF","AS","EU","EU","EU","AF","EU","NA","NA","AF","SA","EU","AF","AF","AF","EU","AF","EU","OC","SA","OC","EU","EU","NA","AF","EU","NA","AS","SA","AF","EU","NA","AF","AF","NA","AF","EU","AN","NA","OC","AF","SA","AS","AN","NA","EU","NA","EU","AS","EU","AS","AS","AS","AS","AS","EU","EU","NA","AS","AS","AF","AS","AS","OC","AF","NA","AS","AS","AS","NA","AS","AS","AS","NA","EU","AS","AF","AF","EU","EU","EU","AF","AF","EU","EU","AF","OC","EU","AF","AS","AS","AS","OC","NA","AF","NA","EU","AF","AS","AF","NA","AS","AF","AF","OC","AF","OC","AF","NA","EU","EU","AS","OC","OC","OC","AS","NA","SA","OC","OC","AS","AS","EU","NA","OC","NA","AS","EU","OC","SA","AS","AF","EU","EU","AF","AS","OC","AF","AF","EU","AS","AF","EU","EU","EU","AF","EU","AF","AF","SA","AF","NA","AS","AF","NA","AF","AN","AF","AS","AS","OC","AS","AF","OC","AS","EU","NA","OC","AS","AF","EU","AF","OC","NA","SA","AS","EU","NA","SA","NA","NA","AS","OC","OC","OC","AS","AF","EU","AF","AF","EU","AF","--","--","--","EU","EU","EU","EU","NA","NA","NA");
+
     // Flag to indicate (to JS) whether cookies are blocked
     protected $cookies_blocked;
 
@@ -42,7 +44,13 @@ class Main extends \Pf4wp\WordpressPlugin
     protected $maxmind_db;
     protected $maxmind_db_v6;
 
-    // Default options
+    // Shortname - pf4wp
+    public $short_name = 'cookillian';
+
+    // Public-side AJAX is enabled - pf4wp
+    public $public_ajax = true;
+
+    // Default options - Pf4wp
     protected $default_options = array(
         'geo_service'         => 'geoplugin',
         'cookie_groups'       => array('Unknown'),
@@ -121,6 +129,33 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
+     * Convert the country code to a readable name
+     *
+     * @param string $country_code The 2-letter country code
+     * @return string The name of the country
+     */
+    public function getCountryName($country_code)
+    {
+        $countries = $this->getCountries();
+
+        switch ($country_code) {
+            case 'EU' :
+                $country_long = 'Europe';
+                break;
+
+            case 'AP' :
+                $country_long = 'Asia/Pacific';
+                break;
+
+            default :
+                $country_long = isset($countries[$country_code]) ? $countries[$country_code]['country'] : 'Unknown';
+                break;
+        }
+
+        return $country_long;
+    }
+
+    /**
      * Obtains the country code using a geo location service, based on an IP
      *
      * @param string $ip The IP address
@@ -171,6 +206,9 @@ class Main extends \Pf4wp\WordpressPlugin
         // Ensure it's an empty string if no valid country was found (for type check when retrieving the transient)
         if (empty($result) || $result == 'XX')
             $result = '';
+
+        // Ensure it's upper-case
+        $result = strtoupper($result);
 
         // Save into caches
         set_site_transient($cache_id, $result, 3600); // One day (note: empty results are re-detected ASAP)
@@ -307,24 +345,8 @@ class Main extends \Pf4wp\WordpressPlugin
 
         // If the user has opted out of cookies, we skip the country check
         if (!$this->optedOut()) {
-            $countries = $this->options->countries;
-
-            // If no countries have been selected in the options, we're done.
-            if (empty($countries))
+            if (!$this->isSelectedCountry($this->getRemoteIP()))
                 return false;
-
-            // Check where the visitor is from and continue if from one selected in options
-            $remote_country = $this->getCountryCode($this->getRemoteIP());
-
-            if ($remote_country) {
-                // We found a country based on the IP address
-                if (!in_array($remote_country, $countries))
-                    return false; // We're done if the visitor isn't in one of the selected countries
-            } else {
-                // We couldn't determine the country
-                if (!$this->options->show_on_unknown_location)
-                    return false; // We're asked not to show the alert if we couldn't determine the country, done!
-            }
         }
 
         // If we reach this point, cookies will be deleted based on their settings.
@@ -385,6 +407,54 @@ class Main extends \Pf4wp\WordpressPlugin
 
         return true;
     }
+
+    /**
+     * Determines if the IP is in the user-defined list of countries
+     *
+     * @return bool Returns `true` if the country is in the user-defined list (or unknown and needs to be handled anyway)
+     */
+    public function isSelectedCountry($ip)
+    {
+        $selected_countries = $this->options->countries;
+        $continents         = array_combine($this->country_codes, $this->continent_codes);
+        $result             = false; // default result (not in list)
+
+        // If no countries have been selected in the options, we're done.
+        if (empty($selected_countries))
+            return $result;
+
+        // Check where the visitor is from according to the geoIP service
+        $remote_country = $this->getCountryCode($ip);
+
+        switch ($remote_country) {
+            case '' :
+                // Unknown country, are we asked to return "true" if we can't determine the country?
+                $result = ($this->options->show_on_unknown_location);
+                break;
+
+            case 'EU' :
+                // Special case #1 - country unknown, continent is Europe
+                $eu     = array_intersect($continents, array($continents['EU']));       // Limit continents to EU
+                $in_eu  = array_intersect_key($eu, array_flip($selected_countries));    // Find selected countries in EU
+                $result = (count($in_eu) > 0);                                          // If one or more selected in EU, true
+                break;
+
+            case 'AP' :
+                // Special case #2 - country unknown, continent is Asia/Pacific (not Oceanea)
+                $ap     = array_intersect($continents, array($continents['AP']));
+                $in_ap  = array_intersect_key($ap, array_flip($selected_countries));
+                $result = (count($in_ap) > 0);
+                break;
+
+            default :
+                // Simple lookup
+                $result = in_array($remote_country, $selected_countries);
+                break;
+        }
+
+        return $result;
+    }
+
 
     /**
      * Detects any unknown cookie and adds them to our list of "known" cookies
@@ -578,11 +648,7 @@ class Main extends \Pf4wp\WordpressPlugin
     public function processResponse($answer)
     {
         $opt_in_or_out = '';
-        $redir_url     = add_query_arg(array(
-            '__r' => substr(md5(time() . rand()), 0, 8),
-            $this->short_name . static::RESP_ID => false,
-
-        ));
+        $redir_url     = (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : add_query_arg(array($this->short_name . static::RESP_ID => false)));
 
         switch ($answer) {
             case 2 :
@@ -845,10 +911,10 @@ class Main extends \Pf4wp\WordpressPlugin
         add_shortcode($this->short_name, array($this, 'onShortCode'));
 
         // Filters
-        add_filter($this->short_name . '_alert', array($this, 'onFilterAlert'));
-        add_filter($this->short_name . '_blocked_cookies', array($this, 'onFilterBlockedCookies'));
-        add_filter($this->short_name . '_opted_in', array($this, 'onFilterOptedIn'));
-        add_filter($this->short_name . '_opted_out', array($this, 'onFilterOptedOut'));
+        add_filter($this->short_name . '_alert',           array($this, 'onFilterAlert'));
+        add_filter($this->short_name . '_blocked_cookies', array($this, 'onFilterBlockedCookies')); // Not rec. JS
+        add_filter($this->short_name . '_opted_in',        array($this, 'onFilterOptedIn'));        // Not rec. JS
+        add_filter($this->short_name . '_opted_out',       array($this, 'onFilterOptedOut'));       // Not rec. JS
 
         // Cookies are handled as early as possible here, disabling sessions, etc.
         $this->cookies_blocked = $this->handleCookies();
@@ -887,30 +953,90 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
+     * Handles an AJAX request
+     *
+     * The AJAX calls are used to bypass caches such as W3TC and WP Super Cache, which
+     * return a static version of the last rendered page. This would mean that handleCookies()
+     * is also not called, until the AJAX 'init' action.
+     *
+     * Note: NONCE is valid up to 24 hours, so W3TC or WP Super Cache should not keep a page
+     * cached for longer than that.
+     *
+     * @param string $action The AJAX action to perform
+     * @param mixed $data Data supplied with the AJAX action
+     */
+    public function onAjaxRequest($action, $data)
+    {
+        switch ($action) {
+            case 'init' :
+                // Performs handleCookies(), and returns JS data based on the result
+                $cookies_blocked = $this->handleCookies();
+
+                $vars = array(
+                    'blocked_cookies' => $cookies_blocked,
+                    'opted_out'       => $this->optedOut(),
+                    'opted_in'        => $this->optedIn(),
+                    'is_manual'       => ($this->options->alert_show == 'manual'),
+                );
+
+                if (!$cookies_blocked) {
+                    // Cookies are not blocked, add some extra JS, if defined (save on extra AJAX calls)
+                    if ($this->options->script_header) {
+                        // Add header scripts
+                        $vars['header_script'] = $this->options->script_header;
+
+                        if ($this->options->js_wrap)
+                            $vars['header_script'] = $this->jsBlock($vars['header_script']);
+                    }
+
+                    if ($this->options->script_footer) {
+                        // Add footer scripts
+                        $vars['footer_script'] = $this->options->script_footer;
+
+                        if ($this->options->js_wrap)
+                            $vars['footer_script'] = $this->jsBlock($vars['footer_script']);
+                    }
+                }
+
+                if ($this->options->debug_mode) {
+                    // Spit out some debug data - this is only shown on JS Console
+                    $countries          = $this->getCountries();
+                    $ip                 = $this->getRemoteIP();
+                    $country_short      = $this->getCountryCode($ip);
+
+                    $vars['debug'] = array(
+                        'handled'             => !($this->optedIn() || (is_admin() && !Helpers::doingAjax()) || is_user_logged_in()),
+                        'logged_in'           => is_user_logged_in(),
+                        'country_list_ok'     => !empty($countries),
+                        'ip'                  => $ip,
+                        'country_short'       => $country_short,
+                        'country_long'        => $this->getCountryName($country_short),
+                        'is_selected_country' => $this->isSelectedCountry($ip),
+                        'opted_in'            => $this->optedIn(),
+                        'opted_out'           => $this->optedOut(),
+                    );
+                }
+
+                $this->ajaxResponse($vars);
+                break;
+
+            case 'displayed' :
+                // Lets the plugin know that an alert was displayed
+                $this->addStat('displayed');
+
+                $this->ajaxResponse(true);
+                break;
+        }
+    }
+
+    /**
      * Expose to public side of cookies are blocked
      */
     public function onPublicScripts()
     {
-        // JavaScript exposing whether cookies have been blocked and whether the visitor has opted out or in
-        echo $this->jsBlock(sprintf("var cookillian = {\"blocked_cookies\":%s,\"opted_out\":%s,\"opted_in\":%s,\"_manual\":%s};",
-            ($this->cookies_blocked) ? 'true' : 'false',
-            ($this->optedOut()) ? 'true' : 'false',
-            ($this->optedIn()) ? 'true' : 'false',
-            ($this->options->alert_show == 'manual') ? 'true' : 'false'
-        ));
+        list($js_url, $version, $debug) = $this->getResourceUrl();
 
-        // @see onPublicfooter()
-        if (($this->cookies_blocked && !$this->optedOut()) && $this->options->alert_content_type == 'default') {
-            list($js_url, $version, $debug) = $this->getResourceUrl();
-
-            wp_enqueue_script($this->getName() . '-pub', $js_url . 'pub' . $debug . '.js', array('jquery'), $version);
-        }
-
-        // Load custom script header
-        if (!$this->cookies_blocked && $this->options->script_header) {
-            $custom_script = $this->options->script_header;
-            echo ($this->options->js_wrap) ? $this->jsBlock($custom_script) : $custom_script;
-        }
+        wp_enqueue_script($this->getName() . '-pub', $js_url . 'pub' . $debug . '.js', array('jquery'), $version);
     }
 
     /**
@@ -918,12 +1044,9 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     public function onPublicStyles()
     {
-        // @see onPublicfooter()
-        if ($this->cookies_blocked && !$this->optedOut() && $this->options->alert_content_type == 'default') {
-            list($css_url, $version, $debug) = $this->getResourceUrl('css');
+        list($css_url, $version, $debug) = $this->getResourceUrl('css');
 
-            wp_enqueue_style($this->getName() . '-pub', $css_url . 'pub' . $debug . '.css', false, $version);
-        }
+        wp_enqueue_style($this->getName() . '-pub', $css_url . 'pub' . $debug . '.css', false, $version);
     }
 
     /**
@@ -931,42 +1054,11 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     public function onPublicFooter()
     {
-        // Render the alert if set to automatically show
         if ($this->options->alert_show == 'auto')
             echo apply_filters('cookillian_alert', '');
 
-        // Load custom script footer
-        if (!$this->cookies_blocked && $this->options->script_footer) {
-            $custom_script = $this->options->script_footer;
-            echo ($this->options->js_wrap) ? $this->jsBlock($custom_script) : $custom_script;
-        }
-
-        // Provide full debug information in the footer
-        if ($this->options->debug_mode) {
-            $sel_countries = $this->options->countries;
-            $countries     = $this->getCountries();
-            $detected_ip   = $this->getRemoteIP();
-            $rem_country   = $this->getCountryCode($detected_ip);
-            $rem_countryl  = isset($countries[$rem_country]) ? $countries[$rem_country]['country'] : 'Unknown';
-            $blk_country   = (in_array($rem_country, $sel_countries));
-
-            $debug_data = array(
-                'Will handle the cookies'                   => !($this->optedIn() || (is_admin() && !Helpers::doingAjax()) || is_user_logged_in()),
-                'Is the visitor logged in'                  => is_user_logged_in(),
-                'Is Admin (not AJAX)'                       => (is_admin() && !Helpers::doingAjax()),
-                'Country list OK'                           => !empty($countries),
-                'Detected remote IP address of the visitor' => $detected_ip,
-                '2-letter code of detected country'         => $rem_country,
-                'Name of detected country'                  => $rem_countryl,
-                'Block cookies for this country'            => $blk_country,
-                'Visitor has opted-in'                      => $this->optedIn(),
-                'Visitor has opted-out'                     => $this->optedOut(),
-            );
-
-            echo "\n<!-- Cookillian Debug Information:\n";
-            var_export($debug_data);
-            echo "\n-->\n";
-        }
+        // We force the alert to display if Javascript is disabled
+        echo '<noscript><style type="text/css" media="screen">.cookillian-alert{ position: absolute; left: 0; top: 0; display: block !important; } .cookillian-alert .close { display: none; }</style></noscript>';
     }
 
     /**
@@ -980,26 +1072,22 @@ class Main extends \Pf4wp\WordpressPlugin
         $result = $original;
 
         // If cookies are found to be blocked and we haven't specifically opted out, we show an alert
-        if ($this->cookies_blocked && !$this->optedOut()) {
-            $this->addStat('displayed');
+        if ($this->options->alert_content_type == 'default') {
+            // Default alert
+            $vars = array_merge(
+                array(
+                    'alert_content' => wpautop($this->options->alert_content),
+                    'response_no'   => add_query_arg(array($this->short_name . static::RESP_ID => 0)),
+                    'response_ok'   => add_query_arg(array($this->short_name . static::RESP_ID => 1)),
+                    'manual'        => ($this->options->alert_show == 'manual'),
+                ),
+                $this->options->fetch(array('alert_heading', 'alert_ok', 'alert_no'))
+            );
 
-            if ($this->options->alert_content_type == 'default') {
-                // Default alert
-                $vars = array_merge(
-                    array(
-                        'alert_content' => wpautop($this->options->alert_content),
-                        'response_no'   => add_query_arg(array($this->short_name . static::RESP_ID => 0)),
-                        'response_ok'   => add_query_arg(array($this->short_name . static::RESP_ID => 1)),
-                        'manual'        => ($this->options->alert_show == 'manual'),
-                    ),
-                    $this->options->fetch(array('alert_heading', 'alert_ok', 'alert_no'))
-                );
-
-                $result = $this->template->render('ask.html.twig', $vars);
-            } else {
-                // Custom alert
-                $result = $this->options->alert_custom_content;
-            }
+            $result = $this->template->render('ask.html.twig', $vars);
+        } else {
+            // Custom alert
+            $result = sprintf('<div class="cookillian-alert" style="display:none;">%s</div>', $this->options->alert_custom_content);
         }
 
         return $result;

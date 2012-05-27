@@ -6,7 +6,7 @@
 #}
 {% spaceless %}
 
-<div class="cookillian-alert">
+<div class="cookillian-alert" style="display:none;">
     <a class="close">×</a>
     <h3 class="alert-heading">{{ alert_heading }}</h3>
     {{ alert_content | raw }}
@@ -15,9 +15,5 @@
         <a class="btn btn-no" href="{{ response_no }}"><i class=""></i>{{ alert_no }}</a>
     </div>
 </div>
-
-{% if not manual %}
-<noscript><style type="text/css" media="screen">.cookillian-alert { position: absolute; left: 0; top: 0; } .cookillian-alert .close { display: none; }</style></noscript>
-{% endif %}
 
 {% endspaceless %}
