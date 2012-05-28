@@ -156,6 +156,35 @@
 
                 <tr>
                     <th scope="row">
+                        {{ __('Alert Style') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="radio" name="alert_style" value="default" {% if alert_style == 'default' %}checked="checked"{% endif %} />
+                            {{ __('Default') }}
+                        </label>
+                        <br />
+                        <label>
+                            <input type="radio" name="alert_style" value="custom" {% if alert_style == "custom" %}checked="checked"{% endif %} />
+                            {{ __('Custom') }}
+                        </label>
+                    </td>
+                </tr>
+
+                <tr class="alert_custom_style_extra">
+                    <th scope="row">
+                        {{ __('Custom Alert Style') }}
+                    </th>
+                    <td>
+                        <p>{{ __('Use CSS to style your alert:') }}</p>
+                        <label>
+                            <textarea class="code" name="alert_custom_style" id="alert_custom_style">{{ alert_custom_style }}</textarea>
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
                         {{ __('Implied Consent') }}
                     </th>
                     <td>

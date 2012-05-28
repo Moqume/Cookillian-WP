@@ -69,6 +69,7 @@ class Main extends \Pf4wp\WordpressPlugin
         'js_wrap'             => true,
         'show_on_unknown_location' => true,
         'noscript_tag'        => true,
+        'alert_style'         => 'default',
     );
 
     /** -------------- HELPERS -------------- */
@@ -1109,9 +1110,13 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     public function onPublicStyles()
     {
-        list($css_url, $version, $debug) = $this->getResourceUrl('css');
+        if ($this->options->alert_style == 'default') {
+            list($css_url, $version, $debug) = $this->getResourceUrl('css');
 
-        wp_enqueue_style($this->getName() . '-pub', $css_url . 'pub' . $debug . '.css', false, $version);
+            wp_enqueue_style($this->getName() . '-pub', $css_url . 'pub' . $debug . '.css', false, $version);
+        } else if ($this->options->alert_custom_style) {
+            printf("<style type=\"text/css\">\n%s\n</style>\n", $this->options->alert_custom_style);
+        }
     }
 
     /**
@@ -1310,6 +1315,8 @@ class Main extends \Pf4wp\WordpressPlugin
                 'maxmind_db_v6'         => 'string',
                 'implied_consent'       => 'bool',
                 'noscript_tag'          => 'bool',
+                'alert_style'           => array('in_array', array('default', 'custom')),
+                'alert_custom_style'    => 'string',
             ));
 
             // Save country selections
@@ -1410,7 +1417,7 @@ class Main extends \Pf4wp\WordpressPlugin
             'alert_show', 'alert_content_type', 'alert_content', 'alert_heading', 'alert_ok', 'alert_no',
             'alert_custom_content', 'required_text', 'script_header', 'script_footer', 'debug_mode',
             'js_wrap', 'show_on_unknown_location', 'maxmind_db', 'maxmind_db_v6', 'implied_consent',
-            'noscript_tag',
+            'noscript_tag', 'alert_style', 'alert_custom_style',
         ));
 
         $vars = array_merge(array(

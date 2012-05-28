@@ -28,8 +28,8 @@ if (typeof cookillian === "undefined") {
     cookillian = {
         showHideCustomAlert : function() {
             var alert_content_type = $('input[name="alert_content_type"]:checked')
-                , alert_normal     = $('.alert_normal')
-                , alert_custom     = $('.alert_custom')
+                , alert_normal     = $(".alert_normal")
+                , alert_custom     = $(".alert_custom")
                 , is_custom;
 
             if (!alert_content_type.length)
@@ -39,6 +39,16 @@ if (typeof cookillian === "undefined") {
 
             alert_custom.showHide(is_custom);
             alert_normal.showHide(!is_custom);
+        },
+
+        showHideCustomAlertStyle : function() {
+            var alert_style                = $('input[name="alert_style"]:checked')
+                , alert_custom_style_extra = $(".alert_custom_style_extra");
+
+            if (!alert_style.length)
+                return;
+
+            alert_custom_style_extra.showHide(alert_style.val() == "custom");
         },
 
         showHideExtras : function() {
@@ -111,6 +121,7 @@ if (typeof cookillian === "undefined") {
 
         /* Show or hide ... */
         $('input[name="alert_content_type"]').change(cookillian.showHideCustomAlert); cookillian.showHideCustomAlert();
+        $('input[name="alert_style"]').change(cookillian.showHideCustomAlertStyle);   cookillian.showHideCustomAlertStyle();
         $('input[name="geo_service"]').change(cookillian.showHideExtras);             cookillian.showHideExtras();
 
         /* Show or hide debug information */
