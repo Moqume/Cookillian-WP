@@ -13,6 +13,7 @@ use Pf4wp\Common\Cookies;
 use Pf4wp\Common\Helpers;
 use Pf4wp\Help\ContextHelp;
 use Pf4wp\Notification\AdminNotice;
+use Pf4wp\Info\PluginInfo;
 
 class Main extends \Pf4wp\WordpressPlugin
 {
@@ -70,6 +71,7 @@ class Main extends \Pf4wp\WordpressPlugin
         'show_on_unknown_location' => true,
         'noscript_tag'        => true,
         'alert_style'         => 'default',
+        'delete_cookies'      => 'before_optout',
     );
 
     /** -------------- HELPERS -------------- */
@@ -338,16 +340,13 @@ class Main extends \Pf4wp\WordpressPlugin
         if ($this->options->debug_mode && is_user_logged_in())
             return true;
 
-        /* Don't handle any cookies if:
-         * - someone's logged in or
-         * - the visitor opted in to recive cookies
-         */
+        // Don't handle any cookies if someone's logged in or the visitor opted in to recive cookies
         if ($this->optedIn() || is_user_logged_in())
             return false;
 
-        // If the user has opted out of cookies, we skip the country or implied check
+        // If the user has not specifically opted out...
         if (!$this->optedOut()) {
-            // Find out if the user has implied consent, and if so, add a statistic, set a cookie and return
+            // Find out if the visitor has implied consent, and if so, add a statistic, set a cookie and return
             if ($this->isImpliedConsent($referer)) {
                 $this->addStat('optin');
 
@@ -356,12 +355,26 @@ class Main extends \Pf4wp\WordpressPlugin
                 return false;
             }
 
-
+            // Find out if the visitor is from one of the user-defined countries
             if (!$this->isSelectedCountry($this->getRemoteIP()))
                 return false;
+
+            // If we are to delete cookies after opt out, we stop here now, but as "true"
+            if ($this->options->delete_cookies == 'after_optout')
+                return true;
         }
 
-        // If we reach this point, cookies will be deleted based on their settings.
+        // From this point, cookies will be deleted based on their settings.
+        $this->deleteCookies();
+
+        return true;
+    }
+
+    /**
+     * Deletes any cookies present
+     */
+    protected function deleteCookies()
+    {
         $session_name = session_name();
 
         // Check if PHP sessions are based on cookies
@@ -416,8 +429,6 @@ class Main extends \Pf4wp\WordpressPlugin
                 Cookies::delete($cookie_name);
             }
         }
-
-        return true;
     }
 
     /**
@@ -467,11 +478,10 @@ class Main extends \Pf4wp\WordpressPlugin
         return $result;
     }
 
-
     /**
      * Detects any unknown cookie and adds them to our list of "known" cookies
      */
-    public function detectUnknownCookies()
+    protected function detectUnknownCookies()
     {
         if (!$this->options->auto_add_cookies)
             return;
@@ -559,7 +569,7 @@ class Main extends \Pf4wp\WordpressPlugin
      * @param string $referer Optional referer (AJAX)
      * @return bool Returns true if the visitor implied consent
      */
-    public function isImpliedConsent($referer = null)
+    protected function isImpliedConsent($referer = null)
     {
         // Check if we're allowing implied consent
         if (!$this->options->implied_consent)
@@ -604,9 +614,21 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
-     * Returns whether the visitor implied consent
+     * Returns whether cookies were (supposed to be) deleted
+     *
+     * @since 1.0.25
      */
-    public function impliedConsent()
+    public function hasDeletedCookies()
+    {
+        return ($this->cookies_blocked && ($this->options->delete_cookies == 'before_optout' || $this->optedOut()) && !(is_user_logged_in() && $this->options->debug_mode));
+    }
+
+    /**
+     * Returns whether the visitor implied consent
+     *
+     * @since 1.0.23
+     */
+    public function hasImpliedConsent()
     {
         return (Cookies::get($this->short_name . static::OPTIN_ID, false) == 2);
     }
@@ -643,13 +665,13 @@ class Main extends \Pf4wp\WordpressPlugin
      * @param string $type One of: 'displayed', 'optin', 'optout'
      *
      */
-    public function addStat($type)
+    protected function addStat($type)
     {
-        if ($this->options->debug_mode)
-            return; // Don't track anything in Debug Mode
+        if ($this->options->debug_mode && is_user_logged_in())
+            return; // Don't track if in debug mode and user is logged in
 
         // First figure out if we're dealing with a crawler/spider
-        if (preg_match('#' . implode('|', $this->crawlers) . '#i', $_SERVER['HTTP_USER_AGENT']))
+        if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match('#' . implode('|', $this->crawlers) . '#i', $_SERVER['HTTP_USER_AGENT']))
             return;
 
         $remote_country = $this->getCountryCode($this->getRemoteIP());
@@ -694,9 +716,33 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
-     * Processes a response to the question of permitting cookies
+     * Resets the stats
+     *
+     * @param int $year The year to reset the statistics for (optional, by default ALL statistics are cleared)
      */
-    public function processResponse($answer)
+    protected function resetStats($year = null)
+    {
+        if (is_null($year)) {
+            // Reset all
+            $this->options->stats = array();
+        } else {
+            // Reset a specific year
+            $stats = $this->options->stats;
+
+            if (isset($stats[$year])) {
+                unset($stats[$year]);
+
+                $this->options->stats = $stats;
+            }
+        }
+    }
+
+    /**
+     * Processes a response to the question of permitting cookies
+     *
+     * @param int $answer 0 = opt out, 1 = opt in, 2 = reset
+     */
+    protected function processResponse($answer)
     {
         $opt_in_or_out = '';
         $redir_url     = (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : add_query_arg(array($this->short_name . static::RESP_ID => false)));
@@ -876,6 +922,18 @@ class Main extends \Pf4wp\WordpressPlugin
         return false;
     }
 
+    /**
+     * Checks if a caching plugin is active
+     */
+    protected function hasActiveCachingPlugin()
+    {
+        $installed = PluginInfo::isInstalled(array(
+            'WP Super Cache', 'W3 Total Cache', 'Quick Cache',
+        ), true);
+
+        return (!empty($installed));
+    }
+
 
     /** -------------- EVENTS -------------- */
 
@@ -888,12 +946,17 @@ class Main extends \Pf4wp\WordpressPlugin
             $this->options->known_cookies = array(
                 'wordpress_*' => array(
                     'desc'  => 'This cookie stores WordPress authentication details.',
-                    'group' => 'Wordpress',
+                    'group' => 'WordPress',
                 ),
                 'wp-settings-*' => array(
                     'desc'  => 'This cookie helps remember your personal preferences within WordPress.',
-                    'group' => 'Wordpress',
+                    'group' => 'WordPress',
                 ),
+                'comment_author_*' => array(
+                    'desc'  => 'This cookie remembers your last comment details, such as your name and email address, so that you will not have to type it again.',
+                    'group' => 'WordPress',
+                ),
+
                 $this->short_name . '_opt_*' => array(
                     'desc'  => 'This cookie stores your preference regarding the use of cookies on this website.',
                     'group' => 'Website',
@@ -971,10 +1034,11 @@ class Main extends \Pf4wp\WordpressPlugin
 
         // Filters
         add_filter($this->short_name . '_alert',           array($this, 'onFilterAlert'));
-        add_filter($this->short_name . '_blocked_cookies', array($this, 'onFilterBlockedCookies')); // Not rec. JS
-        add_filter($this->short_name . '_opted_in',        array($this, 'onFilterOptedIn'));        // Not rec. JS
-        add_filter($this->short_name . '_opted_out',       array($this, 'onFilterOptedOut'));       // Not rec. JS
-        add_filter($this->short_name . '_implied_consent', array($this, 'onFilterImpliedConsent')); // Not rec. JS
+        add_filter($this->short_name . '_blocked_cookies', array($this, 'onFilterBlockedCookies')); // @since 1.0.25
+        add_filter($this->short_name . '_deleted_cookies', array($this, 'onFilterDeletedCookies'));
+        add_filter($this->short_name . '_opted_in',        array($this, 'onFilterOptedIn'));
+        add_filter($this->short_name . '_opted_out',       array($this, 'onFilterOptedOut'));
+        add_filter($this->short_name . '_implied_consent', array($this, 'onFilterImpliedConsent')); // @since 1.0.23
 
         // Cookies are handled as early as possible here, disabling sessions, etc.
         $this->cookies_blocked = $this->handleCookies();
@@ -1000,6 +1064,10 @@ class Main extends \Pf4wp\WordpressPlugin
         list($js_url, $version, $debug) = $this->getResourceUrl();
 
         wp_enqueue_script($this->getName() . '-admin', $js_url . 'admin' . $debug . '.js', array('jquery'), $version);
+
+        wp_localize_script($this->getName() . '-admin', $this->getName() . '_translate', array(
+            'are_you_sure' => __('Are you sure?', $this->getName()),
+        ));
     }
 
     /**
@@ -1038,10 +1106,12 @@ class Main extends \Pf4wp\WordpressPlugin
 
                 $vars = array(
                     'blocked_cookies' => $cookies_blocked,
-                    'implied_consent' => $this->impliedConsent(),
+                    'deleted_cookies' => ($cookies_blocked && ($this->options->delete_cookies == 'before_optout' || $this->optedOut()) && !(is_user_logged_in() && $this->options->debug_mode)),
+                    'implied_consent' => $this->hasImpliedConsent(),
                     'opted_out'       => $this->optedOut(),
                     'opted_in'        => $this->optedIn(),
-                    'is_manual'       => ($this->options->alert_show == 'manual'),
+                    'is_manual'       => ($this->options->alert_show == 'manual'),           // Used internally
+                    'has_nst'         => ($this->options->noscript_tag && $cookies_blocked && !$this->optedOut() && !$this->hasActiveCachingPlugin()), // Used internally
                 );
 
                 if (!$cookies_blocked) {
@@ -1077,9 +1147,6 @@ class Main extends \Pf4wp\WordpressPlugin
                         'country_short'       => $country_short,
                         'country_long'        => $this->getCountryName($country_short),
                         'is_selected_country' => $this->isSelectedCountry($ip),
-                        'implied_consent'     => $this->impliedConsent(),
-                        'opted_in'            => $this->optedIn(),
-                        'opted_out'           => $this->optedOut(),
                     );
                 }
 
@@ -1096,7 +1163,7 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
-     * Expose to public side of cookies are blocked
+     * Queue the public-side JS
      */
     public function onPublicScripts()
     {
@@ -1106,7 +1173,7 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
-     * Load Public CSS if cookies are blocked
+     * Queue public-side CSS
      */
     public function onPublicStyles()
     {
@@ -1127,10 +1194,11 @@ class Main extends \Pf4wp\WordpressPlugin
         if ($this->options->alert_show == 'auto')
             echo apply_filters('cookillian_alert', '');
 
-        // Since we cannot use JavaScript for this, we add the "noscript" tag
-        // based on what information we have now. This will NOT work with caching plugins!
-        if ($this->options->noscript_tag && !$this->optedIn() && !$this->optedOut())
+        // Provide a "noscript" tag for browsers that do not have JS enabled (not compatible with caching plugins)
+        if ($this->options->noscript_tag && $this->cookies_blocked && !$this->optedOut() && !$this->hasActiveCachingPlugin()) {
+            $this->addStat('displayed');
             echo '<noscript><style type="text/css" media="screen">.cookillian-alert{ position: absolute; left: 0; top: 0; display: block !important; } .cookillian-alert .close { display: none; }</style></noscript>';
+        }
     }
 
     /**
@@ -1166,13 +1234,14 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
-     * Filter for the impliedConsent() function
+     * Filter for the hasImpliedConsent() function
      *
      * @param mixed $original Original value passed to the filter (ignored)
+     * @since 1.0.23
      */
     public function onFilterImpliedConsent($original)
     {
-        return $this->impliedConsent();
+        return $this->hasImpliedConsent();
     }
 
     /**
@@ -1193,6 +1262,16 @@ class Main extends \Pf4wp\WordpressPlugin
     public function onFilterOptedOut($original)
     {
         return $this->optedOut();
+    }
+
+    /**
+     * Filter to return if cookies were deleted
+     *
+     * @param mixed $original Original value passed to the filter (ignored)
+     */
+    public function onFilterDeletedCookies($original)
+    {
+        return $this->hasDeletedCookies();
     }
 
     /**
@@ -1317,6 +1396,7 @@ class Main extends \Pf4wp\WordpressPlugin
                 'noscript_tag'          => 'bool',
                 'alert_style'           => array('in_array', array('default', 'custom')),
                 'alert_custom_style'    => 'string',
+                'delete_cookies'        => array('in_array', array('before_optout', 'after_optout')),
             ));
 
             // Save country selections
@@ -1417,7 +1497,7 @@ class Main extends \Pf4wp\WordpressPlugin
             'alert_show', 'alert_content_type', 'alert_content', 'alert_heading', 'alert_ok', 'alert_no',
             'alert_custom_content', 'required_text', 'script_header', 'script_footer', 'debug_mode',
             'js_wrap', 'show_on_unknown_location', 'maxmind_db', 'maxmind_db_v6', 'implied_consent',
-            'noscript_tag', 'alert_style', 'alert_custom_style',
+            'noscript_tag', 'alert_style', 'alert_custom_style', 'delete_cookies'
         ));
 
         $vars = array_merge(array(
@@ -1431,6 +1511,7 @@ class Main extends \Pf4wp\WordpressPlugin
             'geo_services'          => $geo_services,
             'debug_info'            => $debug_info,
             'has_geo_data'          => $this->hasGeoData(),
+            'has_caching'           => $this->hasActiveCachingPlugin(),
         ), $export_options);
 
         $this->template->display('settings.html.twig', $vars);
@@ -1499,6 +1580,24 @@ class Main extends \Pf4wp\WordpressPlugin
         $this->template->display('cookies.html.twig', $vars);
     }
 
+    public function onStatsMenuLoad()
+    {
+        if (!empty($_POST) && isset($_POST['_nonce'])) {
+            if (!wp_verify_nonce($_POST['_nonce'], 'onStatsMenu'))
+                wp_die(__('You do not have permission to do that [nonce].', $this->getName()));
+
+            if (isset($_POST['clear-stats'])) {
+                // Reset statitics
+                $year = null;
+
+                if (isset($_POST['stat_year']) && is_numeric($_POST['stat_year']))
+                    $year = intval($_POST['stat_year']);
+
+                $this->resetStats($year);
+            }
+        }
+    }
+
     /**
      * Renders the statistics menu page
      */
@@ -1512,11 +1611,14 @@ class Main extends \Pf4wp\WordpressPlugin
         // Sort available years
         sort($years);
 
-        // Pick a year
-        if (!empty($_REQUEST) && isset($_REQUEST['stat_year']) && is_numeric($_REQUEST['stat_year']))
-            $year = intval($_REQUEST['stat_year']);
+        if (!empty($_POST)) {
+            // Pick a year
+            if (isset($_POST['select-year']) && isset($_POST['stat_year']) && is_numeric($_POST['stat_year']))
+                $year = intval($_POST['stat_year']);
+        }
 
         $vars = array(
+            'nonce'     => wp_nonce_field('onStatsMenu', '_nonce', true, false),
             'year'      => $year,
             'years'     => (!empty($years)) ? $years : array($year),
             'stats'     => (isset($stats[$year])) ? $stats[$year] : array(),

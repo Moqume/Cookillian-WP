@@ -156,7 +156,7 @@
 
                 <tr>
                     <th scope="row">
-                        {{ __('Alert Style') }}
+                        {{ __('Alert Styling') }}
                     </th>
                     <td>
                         <label>
@@ -190,7 +190,7 @@
                     <td>
                         <label>
                             <input type="checkbox" name="implied_consent" {% if implied_consent %}checked="checked"{% endif %} />
-                            {{ __('If the visitor has ignored the alert, imply the visitor has opted in') }}
+                            {{ __('If the visitor ignores the alert, imply the visitor has opted in') }}
                         </label>
                     </td>
                 </tr>
@@ -332,8 +332,37 @@
                     <td>
                         <label>
                             <input type="checkbox" name="auto_add_cookies" {% if auto_add_cookies %}checked="checked"{% endif %} />
-                            {{ __('Automatically add new/unknown cookies to the Cookies list') }}
+                            {{ __('Automatically add new/unknown cookies to the <em>Cookies</em> list') | raw }}
                         </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Root Cookies') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="delete_root_cookies" {% if delete_root_cookies %}checked="checked"{% endif %} />
+                            {{ __('Delete root cookies in addition to local cookies') }}
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Delete cookies') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="radio" name="delete_cookies" value="before_optout" {% if delete_cookies == 'before_optout' %}checked="checked"{% endif %} />
+                            {{ __('Before, or ') }}
+                        </label>
+                        <label>
+                            <input type="radio" name="delete_cookies" value="after_optout" {% if delete_cookies == "after_optout" %}checked="checked"{% endif %} />
+                            {{ __('After') }}
+                        </label>
+                        {{ __(' opt out') }}
                     </td>
                 </tr>
 
@@ -350,18 +379,7 @@
                     </td>
                 </tr>
 
-                <tr>
-                    <th scope="row">
-                        {{ __('Root Cookies') }}
-                    </th>
-                    <td>
-                        <label>
-                            <input type="checkbox" name="delete_root_cookies" {% if delete_root_cookies %}checked="checked"{% endif %} />
-                            {{ __('Filter root cookies in addition to local cookies') }}
-                        </label>
-                    </td>
-                </tr>
-
+                {% if not has_caching %}
                 <tr>
                     <th scope="row">
                         {{ __('non-Javascript Support') }}
@@ -370,10 +388,10 @@
                         <label>
                             <input type="checkbox" name="noscript_tag" id="noscript_tag" {% if noscript_tag %}checked="checked"{% endif %} />
                             {{ __('Provide a dynamic <code>&lt;noscript&gt;</code> section for non-JavaScript browsers') | raw }}
-                            <span class="description">({{ __('Not compatible with caching plugins such as WP Super Cache and W3 Total Cache') }})</span>
                         </label>
                     </td>
                 </tr>
+                {% endif %}
 
                 <tr>
                     <th scope="row">

@@ -10,14 +10,17 @@
 {% set total_optin   = 0 %}
 {% set total_optout  = 0 %}
 <div style="position: relative; width: 100%;"> {# REL DIV #}
-    <form method="post" action="" id="year_form">
+    <form method="post" action="" id="stats_form">
+        {{ nonce | raw }}
         <select name="stat_year">
             {% for a_year in years %}
             <option value="{{ a_year }}" {% if a_year == year %}selected="selected"{% endif %}>{{ a_year }}</option>
             {% endfor %}
         </select>
 
-        <input type="submit" class="button action" value="{{ __('Select Year') }}" />
+        <input type="submit" name="select-year" class="button action" value="{{ __('Select year') }}" />
+
+        <input type="submit" name="clear-stats" id="clear-stats" class="button action" value="{{ __('Clear statistics for selected year') }}" />
     </form>
 
     <h3>{{ __('Results for') }} {{ year }}</h3>
@@ -44,9 +47,15 @@
                     {% set total_display = total_display + country_stat.0 %}
                     {% set total_optin   = total_optin   + country_stat.1 %}
                     {% set total_optout  = total_optout  + country_stat.2 %}
-                    {% set country_name  = countries[country_abbr].country %}
-                    {% if country_name is empty %}
+
+                    {% if country_abbr is empty %}
                         {% set country_name = 'Unknown' %}
+                    {% elseif country_abbr == 'EU' %}
+                        {% set country_name = 'Europe (country unknown)' %}
+                    {% elseif country_abbr == 'AP' %}
+                        {% set country_name = 'Asia/Pacific (country unknown)' %}
+                    {% else %}
+                        {% set country_name  = countries[country_abbr].country %}
                     {% endif %}
 
                     <tr>

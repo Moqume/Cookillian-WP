@@ -68,10 +68,11 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.0.25 =
+= 1.0.26 =
 * __Added:__ Support for "Implied Consent"
 * __Added:__ Support for caching plugins, such as WP Super Cache and W3 Total Cache
 * __Added:__ Option to provide custom styling for the alert from the menu
+* __Added:__ Option to delete cookies before or after the visitor has opted out
 * Fixed: Fixed a bug that overwrote existing cookies from the __Cookies__ listing
 * Fixed: Empty country name on "Unknown" country in statistics
 * Fixed: If a generic "EU" or "AP" is retured by the geolocation service, determine if selected countries falls within that region

@@ -55,6 +55,10 @@ if (typeof cookillian === "undefined") {
 
             if (resp) {
                 // We have a response
+                if (typeof resp.debug !== "undefined" && typeof console === "object") {
+                    // We have debug details, show it in the console if it's available
+                    console.log(resp);
+                }
 
                 if (typeof resp.header_script !== "undefined") {
                     // "head" exists at this point (it's where we're called from), so add
@@ -62,11 +66,6 @@ if (typeof cookillian === "undefined") {
                     $("head").append(resp.header_script);
 
                     delete resp.header_script;
-                }
-
-                if (typeof resp.debug !== "undefined" && typeof console === "object") {
-                    // We have debug details, show it in the console if it's available
-                    console.log(resp.debug);
                 }
 
                 // And extend ourselves with the response
@@ -77,7 +76,8 @@ if (typeof cookillian === "undefined") {
                     "blocked_cookes" : true,
                     "opted_out"      : false,
                     "opted_in"       : false,
-                    "is_manual"      : true
+                    "is_manual"      : true,
+                    "has_nst"        : false,
                 });
             }
         },
@@ -111,8 +111,8 @@ if (typeof cookillian === "undefined") {
                 }
 
                 // Give some feedback to the plugin that we decided to display an alert (and force it as async)
-                if (typeof cookillian.debug === "undefined" || (!cookillian.debug.logged_in)) {
-                    cookillian.getAjaxData('displayed', false, function() {});
+                if ((typeof cookillian.debug === "undefined" || !cookillian.debug.logged_in) && !cookillian.has_nst) {
+                    cookillian.getAjaxData('displayed', true, function() {});
                 }
             }
         }

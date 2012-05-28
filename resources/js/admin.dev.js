@@ -69,7 +69,6 @@ if (typeof cookillian === "undefined") {
                 return;
 
             delete_buttons.click(function(e) {
-                console.log("Click!");
                 row = $("#" + $(this).attr("data-row"));
 
                 if (row.length) {
@@ -117,6 +116,13 @@ if (typeof cookillian === "undefined") {
             // Focus it
             $('input:first', cookie_table).focus();
             return false;
+        });
+
+        /* Provide an alert for resetting statistics */
+        $("#clear-stats").click(function(e) {
+            if (!confirm(cookillian_translate.are_you_sure)) {
+                e.preventDefault();
+            }
         });
 
         /* Show or hide ... */
