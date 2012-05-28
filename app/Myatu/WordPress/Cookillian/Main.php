@@ -68,6 +68,7 @@ class Main extends \Pf4wp\WordpressPlugin
         'stats'               => array(),
         'js_wrap'             => true,
         'show_on_unknown_location' => true,
+        'noscript_tag'        => true,
     );
 
     /** -------------- HELPERS -------------- */
@@ -324,9 +325,10 @@ class Main extends \Pf4wp\WordpressPlugin
      * to the plugin cookie database and removes all cookies with the exception of
      * those marked as required.
      *
+     * @param string $referer Referer of the current page (AJAX, @since 1.0.23)
      * @return bool Returns `true` if cookies are blocked
      */
-    public function handleCookies()
+    public function handleCookies($referer = null)
     {
         // We detect unknown cookies first
         $this->detectUnknownCookies();
@@ -336,15 +338,24 @@ class Main extends \Pf4wp\WordpressPlugin
             return true;
 
         /* Don't handle any cookies if:
-         * - we're in Admin (except doing Ajax),
-         * - when someone's logged in or
+         * - someone's logged in or
          * - the visitor opted in to recive cookies
          */
-        if ($this->optedIn() || (is_admin() && !Helpers::doingAjax()) || is_user_logged_in())
+        if ($this->optedIn() || is_user_logged_in())
             return false;
 
-        // If the user has opted out of cookies, we skip the country check
+        // If the user has opted out of cookies, we skip the country or implied check
         if (!$this->optedOut()) {
+            // Find out if the user has implied consent, and if so, add a statistic, set a cookie and return
+            if ($this->isImpliedConsent($referer)) {
+                $this->addStat('optin');
+
+                Cookies::set($this->short_name . static::OPTIN_ID, 2, strtotime(static::COOKIE_LIFE), true, false, '/');
+
+                return false;
+            }
+
+
             if (!$this->isSelectedCountry($this->getRemoteIP()))
                 return false;
         }
@@ -541,6 +552,37 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
+     * Checks if the visitor has seen the alert before, and implied consent
+     *
+     * @since 1.0.23
+     * @param string $referer Optional referer (AJAX)
+     * @return bool Returns true if the visitor implied consent
+     */
+    public function isImpliedConsent($referer = null)
+    {
+        // Check if we're allowing implied consent
+        if (!$this->options->implied_consent)
+            return false;
+
+        // No referer provided, grab it
+        if (is_null($referer)) {
+            if (isset($_SERVER['HTTP_REFERER']))
+                $referer = $_SERVER['HTTP_REFERER'];
+        }
+
+        // If there's no referer, then the visitor must not have seen the alert before
+        if (!$referer)
+            return false;
+
+        // Figure out if the referer was within the home url (regardless of scheme, query args, anchors, etc)
+        $home_url        = get_home_url();
+        $parsed_home_url = rtrim(parse_url($home_url, PHP_URL_HOST) . parse_url($home_url, PHP_URL_PATH), '/');
+        $parsed_referer  = rtrim(parse_url($referer,  PHP_URL_HOST) . parse_url($referer,  PHP_URL_PATH), '/');
+
+        return (strpos($parsed_referer, $parsed_home_url) === 0);
+    }
+
+    /**
      * Returns the DNT/Do Not Track browser header value
      *
      * See http://tools.ietf.org/html/draft-mayer-do-not-track-00. If the header
@@ -558,6 +600,14 @@ class Main extends \Pf4wp\WordpressPlugin
             return $_SERVER['HTTP_DNT'];
 
         return '';
+    }
+
+    /**
+     * Returns whether the visitor implied consent
+     */
+    public function impliedConsent()
+    {
+        return (Cookies::get($this->short_name . static::OPTIN_ID, false) == 2);
     }
 
     /**
@@ -712,6 +762,7 @@ class Main extends \Pf4wp\WordpressPlugin
      *
      * @param array Array containing return value of wp_handle_upload()
      * @return array Array containing return values similar to wp_handle_upload()
+     * @since 1.0.17
      */
     protected function handleFileUpload($upload)
     {
@@ -783,6 +834,8 @@ class Main extends \Pf4wp\WordpressPlugin
 
     /**
      * Clears transients related to Cookillian
+     *
+     * @since 1.0.17
      */
     protected function clearTransients()
     {
@@ -809,6 +862,7 @@ class Main extends \Pf4wp\WordpressPlugin
      * Determine if existing Geolocation information is available
      *
      * @return string|bool Returns a string of a known geolocation provider if data is available, false otherwise
+     * @since 1.0.17
      */
     protected function hasGeoData()
     {
@@ -901,6 +955,10 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     public function onRegisterActions()
     {
+        // Do not bother with this if we're processing an AJAX call
+        if (Helpers::doingAjax())
+            return;
+
         // Was there a response to the cookie alert?
         if (isset($_REQUEST[$this->short_name . static::RESP_ID]))
             $this->processResponse((int)$_REQUEST[$this->short_name . static::RESP_ID]);
@@ -915,6 +973,7 @@ class Main extends \Pf4wp\WordpressPlugin
         add_filter($this->short_name . '_blocked_cookies', array($this, 'onFilterBlockedCookies')); // Not rec. JS
         add_filter($this->short_name . '_opted_in',        array($this, 'onFilterOptedIn'));        // Not rec. JS
         add_filter($this->short_name . '_opted_out',       array($this, 'onFilterOptedOut'));       // Not rec. JS
+        add_filter($this->short_name . '_implied_consent', array($this, 'onFilterImpliedConsent')); // Not rec. JS
 
         // Cookies are handled as early as possible here, disabling sessions, etc.
         $this->cookies_blocked = $this->handleCookies();
@@ -964,16 +1023,21 @@ class Main extends \Pf4wp\WordpressPlugin
      *
      * @param string $action The AJAX action to perform
      * @param mixed $data Data supplied with the AJAX action
+     * @since 1.0.22
      */
     public function onAjaxRequest($action, $data)
     {
         switch ($action) {
             case 'init' :
+                if (!isset($data['true_referer']))
+                    return; // Malformed request
+
                 // Performs handleCookies(), and returns JS data based on the result
-                $cookies_blocked = $this->handleCookies();
+                $cookies_blocked = $this->handleCookies($data['true_referer']);
 
                 $vars = array(
                     'blocked_cookies' => $cookies_blocked,
+                    'implied_consent' => $this->impliedConsent(),
                     'opted_out'       => $this->optedOut(),
                     'opted_in'        => $this->optedIn(),
                     'is_manual'       => ($this->options->alert_show == 'manual'),
@@ -1005,13 +1069,14 @@ class Main extends \Pf4wp\WordpressPlugin
                     $country_short      = $this->getCountryCode($ip);
 
                     $vars['debug'] = array(
-                        'handled'             => !($this->optedIn() || (is_admin() && !Helpers::doingAjax()) || is_user_logged_in()),
+                        'handle'              => !($this->optedIn() || is_user_logged_in()),
                         'logged_in'           => is_user_logged_in(),
                         'country_list_ok'     => !empty($countries),
                         'ip'                  => $ip,
                         'country_short'       => $country_short,
                         'country_long'        => $this->getCountryName($country_short),
                         'is_selected_country' => $this->isSelectedCountry($ip),
+                        'implied_consent'     => $this->impliedConsent(),
                         'opted_in'            => $this->optedIn(),
                         'opted_out'           => $this->optedOut(),
                     );
@@ -1057,8 +1122,10 @@ class Main extends \Pf4wp\WordpressPlugin
         if ($this->options->alert_show == 'auto')
             echo apply_filters('cookillian_alert', '');
 
-        // We force the alert to display if Javascript is disabled
-        echo '<noscript><style type="text/css" media="screen">.cookillian-alert{ position: absolute; left: 0; top: 0; display: block !important; } .cookillian-alert .close { display: none; }</style></noscript>';
+        // Since we cannot use JavaScript for this, we add the "noscript" tag
+        // based on what information we have now. This will NOT work with caching plugins!
+        if ($this->options->noscript_tag && !$this->optedIn() && !$this->optedOut())
+            echo '<noscript><style type="text/css" media="screen">.cookillian-alert{ position: absolute; left: 0; top: 0; display: block !important; } .cookillian-alert .close { display: none; }</style></noscript>';
     }
 
     /**
@@ -1091,6 +1158,16 @@ class Main extends \Pf4wp\WordpressPlugin
         }
 
         return $result;
+    }
+
+    /**
+     * Filter for the impliedConsent() function
+     *
+     * @param mixed $original Original value passed to the filter (ignored)
+     */
+    public function onFilterImpliedConsent($original)
+    {
+        return $this->impliedConsent();
     }
 
     /**
@@ -1231,6 +1308,8 @@ class Main extends \Pf4wp\WordpressPlugin
                 'show_on_unknown_location' => 'bool',
                 'maxmind_db'            => 'string', // Note, this will be overriden with file uploads
                 'maxmind_db_v6'         => 'string',
+                'implied_consent'       => 'bool',
+                'noscript_tag'          => 'bool',
             ));
 
             // Save country selections
@@ -1317,16 +1396,21 @@ class Main extends \Pf4wp\WordpressPlugin
             ),
         );
 
-        $rem_ip      = $this->getRemoteIP();
-        $countries   = $this->getCountries();
-        $rem_country = $this->getCountryCode($rem_ip);
-        $country     = isset($countries[$rem_country]) ? $countries[$rem_country]['country'] : 'Unknown';
+        // Get the debug information and add the current detected IP and country to it
+        $ip = $this->getRemoteIP();
 
+        $debug_info = array_merge($this->getDebugInfo(), array(
+            'Detected IP'      => $ip,
+            'Detected Country' => $this->getCountryName($this->getCountryCode($ip)),
+        ));
+
+        // Export the options, which will be added to vars
         $export_options = $this->options->fetch(array(
             'auto_add_cookies', 'delete_root_cookies', 'php_sessions_required',
             'alert_show', 'alert_content_type', 'alert_content', 'alert_heading', 'alert_ok', 'alert_no',
             'alert_custom_content', 'required_text', 'script_header', 'script_footer', 'debug_mode',
-            'js_wrap', 'show_on_unknown_location', 'maxmind_db', 'maxmind_db_v6',
+            'js_wrap', 'show_on_unknown_location', 'maxmind_db', 'maxmind_db_v6', 'implied_consent',
+            'noscript_tag',
         ));
 
         $vars = array_merge(array(
@@ -1338,10 +1422,8 @@ class Main extends \Pf4wp\WordpressPlugin
             'plugin_home'           => \Pf4wp\Info\PluginInfo::getInfo(false, $this->getPluginBaseName(), 'PluginURI'),
             'countries'             => $this->getCountries(true),
             'geo_services'          => $geo_services,
-            'debug_info'            => $this->getDebugInfo(),
+            'debug_info'            => $debug_info,
             'has_geo_data'          => $this->hasGeoData(),
-            'current_ip'            => $rem_ip,
-            'current_location'      => $country,
         ), $export_options);
 
         $this->template->display('settings.html.twig', $vars);
@@ -1436,5 +1518,4 @@ class Main extends \Pf4wp\WordpressPlugin
 
         $this->template->display('stats.html.twig', $vars);
     }
-
 }

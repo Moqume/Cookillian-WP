@@ -22,6 +22,7 @@ If the visitor allows for cookies (either through opt in or a visitor outside th
 
 With the included statistics, you can see how many visitors have decided to opt in, out or ignore the cookie alert per country, for each month of the year.
 
+
 = Features =
 
 * Selective filtering/alerts based on the visitor's originating country
@@ -38,7 +39,11 @@ With the included statistics, you can see how many visitors have decided to opt 
 * Exposed PHP/WordPress Filters and JavaScript variables regarding cookie permissions, opt-in and opt-out for complex sites
 * Statistics to track the impact of the EC Directive
 * Debug mode for web development and testing
+* Supports caching plugins such as WP Super Cache
 * Support for the DNT/Do Not Track browser headers (http://donottrack.us)
+* Support for "Implied Consent"
+
+Visit the [official website](http://myatus.com/projects/cookillian/) for more details.
 
 == Installation ==
 
@@ -63,15 +68,17 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.0.22 =
+= 1.0.24 =
+* __Added:__ Support for "Implied Consent"
 * __Added:__ Support for caching plugins, such as WP Super Cache and W3 Total Cache
 * Fixed: Fixed a bug that overwrote existing cookies from the __Cookies__ listing
 * Fixed: Empty country name on "Unknown" country in statistics
 * Fixed: If a generic "EU" or "AP" is retured by the geolocation service, determine if selected countries falls within that region
 * Changed: On JavaScript-enabled browsers, the _Delete_ box has been replaced by a _Remove_ button in the __Cookies__ listing
+* Changed: Made the _noscript_ tag optional, to accomodate caching plugins
 
 = 1.0.17.1 (22 May 2012) =
-* Fixed: Fixed bug that caused the plugin from operating on certain systems
+* Fixed: Fixed bug that caused the plugin from operating on certain systems (apache_note())
 
 = 1.0.17 (22 May 2012) =
 * __Added:__ Support for [MaxMind](http://www.maxmind.com) geolocation database or Apache module/NginX GeoIP module

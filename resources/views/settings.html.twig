@@ -5,28 +5,13 @@
     file that was distributed with this source code.
 #}
 
-<div class="ip-info">
-    {{ __('Your current location, based on IP') }} <strong>{{ current_ip }}</strong>, {{ __('is') }} <strong>{{ current_location }}</strong>.
-</div>
-
 <div style="position: relative; width: 100%;"> {# REL DIV #}
     <form method="post" action="" id="settings_form" enctype="multipart/form-data">
         {{ nonce | raw }}
 
+        <h3>Geolocation</h3>
         <table class="form-table">
             <tbody>
-                <tr>
-                    <th scope="row">
-                        {{ __('Auto-add Cookies') }}
-                    </th>
-                    <td>
-                        <label>
-                            <input type="checkbox" name="auto_add_cookies" {% if auto_add_cookies %}checked="checked"{% endif %} />
-                            {{ __('Automatically add new/unknown cookies to the Cookies list') }}
-                        </label>
-                    </td>
-                </tr>
-
                 <tr>
                     <th scope="row">
                         {{ __('Geolocation Service') }}
@@ -169,6 +154,17 @@
                     </td>
                 </tr>
 
+                <tr>
+                    <th scope="row">
+                        {{ __('Implied Consent') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="implied_consent" {% if implied_consent %}checked="checked"{% endif %} />
+                            {{ __('If the visitor has ignored the alert, imply the visitor has opted in') }}
+                        </label>
+                    </td>
+                </tr>
             </tbody>
         </table>
 
@@ -282,12 +278,36 @@
                         </label>
                     </td>
                 </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('JavaScript Tags') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="js_wrap" {% if js_wrap %}checked="checked"{% endif %} />
+                            {{ __('Automatically wrap header and footer in <code>&lt;script&gt;</code> and <code>&lt;/script&gt;</code> tags') | raw }}
+                        </label>
+                    </td>
+                </tr>
             </tbody>
         </table>
 
         <h3>Advanced Options</h3>
         <table class="form-table">
             <tbody>
+                <tr>
+                    <th scope="row">
+                        {{ __('Auto-add Cookies') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="auto_add_cookies" {% if auto_add_cookies %}checked="checked"{% endif %} />
+                            {{ __('Automatically add new/unknown cookies to the Cookies list') }}
+                        </label>
+                    </td>
+                </tr>
+
                 <tr>
                     <th scope="row">
                         {{ __('PHP Sessions') }}
@@ -315,12 +335,13 @@
 
                 <tr>
                     <th scope="row">
-                        {{ __('JavaScript Tags') }}
+                        {{ __('non-Javascript Support') }}
                     </th>
                     <td>
                         <label>
-                            <input type="checkbox" name="js_wrap" {% if js_wrap %}checked="checked"{% endif %} />
-                            {{ __('Automatically wrap optional JavaScript in <code>&lt;script&gt;</code> and <code>&lt;/script&gt;</code> tags') | raw }}
+                            <input type="checkbox" name="noscript_tag" id="noscript_tag" {% if noscript_tag %}checked="checked"{% endif %} />
+                            {{ __('Provide a dynamic <code>&lt;noscript&gt;</code> section for non-JavaScript browsers') | raw }}
+                            <span class="description">({{ __('Not compatible with caching plugins such as WP Super Cache and W3 Total Cache') }})</span>
                         </label>
                     </td>
                 </tr>
@@ -333,7 +354,7 @@
                         <label>
                             <input type="checkbox" name="debug_mode" {% if debug_mode %}checked="checked"{% endif %} />
                             {{ __('Enable debug mode') }}
-                            <span class="description">({{ __('An alert will always be shown to logged-in users, and debug details are added to the HTML source at all times') }})</span>
+                            <span class="description">({{ __('An alert will always be shown to logged-in users, and debug details can be seen using the JavaScript console') }})</span>
                         </label>
                     </td>
                 </tr>

@@ -45,30 +45,13 @@ if (typeof cookillian === "undefined") {
         },
 
         /**
-         * Injects an element into the DOM
-         *
-         * @param string element_tag The element tag where to inject the new element
-         * @param object element The element to inject
-         */
-        injectElement : function(element_tag, element) {
-            var script_elements;
-
-            // Basic sanity check
-            if (typeof element_tag !== "string") {
-                return;
-            }
-
-            script_elements = document.getElementsByTagName(element_tag)[0];
-            script_elements.parentNode.insertBefore(element, script_elements);
-        },
-
-        /**
          * Initializes Cookillian
          *
          * Note: the AJAX call is NOT asynchronous because we need to keep the execution order
          */
         init : function() {
-            var resp = cookillian.getAjaxData('init', false);
+            var true_referer = (document.referer) ? document.referer : false
+                , resp = cookillian.getAjaxData('init', {"true_referer" : true_referer});
 
             if (resp) {
                 // We have a response

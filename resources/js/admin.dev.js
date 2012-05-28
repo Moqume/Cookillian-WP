@@ -6,26 +6,39 @@
  *
  */
 
-if (cookillian === undefined)
+if (typeof cookillian === "undefined") {
     var cookillian = {};
+}
 
 (function($){
+    if (!$.isFunction($.fn.showHide)) {
+        $.fn.showHide = function(showOrHide){
+            var element = $(this[0]);
+
+            if (showOrHide) {
+                element.fadeIn("slow");
+            } else {
+                element.fadeOut("slow");
+            }
+
+            return this;
+        };
+    }
+
     cookillian = {
         showHideCustomAlert : function() {
             var alert_content_type = $('input[name="alert_content_type"]:checked')
                 , alert_normal     = $('.alert_normal')
-                , alert_custom     = $('.alert_custom');
+                , alert_custom     = $('.alert_custom')
+                , is_custom;
 
             if (!alert_content_type.length)
                 return;
 
-            if (alert_content_type.val() == "custom") {
-                alert_custom.show();
-                alert_normal.hide();
-            } else {
-                alert_custom.hide();
-                alert_normal.show();
-            }
+            is_custom = (alert_content_type.val() == "custom");
+
+            alert_custom.showHide(is_custom);
+            alert_normal.showHide(!is_custom);
         },
 
         showHideExtras : function() {
@@ -35,7 +48,7 @@ if (cookillian === undefined)
             if (!geo_checked.length)
                 return;
 
-            maxmind_settings.toggle(geo_checked.val() == 'maxmind');
+            maxmind_settings.showHide(geo_checked.val() == 'maxmind');
         },
 
         initCookieDeleteButtons : function() {
