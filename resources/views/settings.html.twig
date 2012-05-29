@@ -120,18 +120,29 @@
             <tbody>
                 <tr>
                     <th scope="row">
-                        {{ __('Show Alert') }}
+                        {{ __('Display Alert') }}
                     </th>
                     <td>
                         <label>
                             <input type="radio" name="alert_show" value="auto" {% if alert_show == 'auto' %}checked="checked"{% endif %} />
                             {{ __('Automatic') }}
                         </label>
-                        <br />
                         <label>
                             <input type="radio" name="alert_show" value="manual" {% if alert_show == "manual" %}checked="checked"{% endif %} />
                             {{ __('Manually') }}
-                            <span class="description">{{ __('See <strong>Help</strong> how to display the alert.') | raw }}</span>
+                        </label>
+                        <span class="description">({{ __('See <strong>Help</strong> how to display the alert.') | raw }})</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Implied Consent') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="implied_consent" {% if implied_consent %}checked="checked"{% endif %} />
+                            {{ __('If the visitor ignores the displayed alert, imply the visitor has opted in') }}
                         </label>
                     </td>
                 </tr>
@@ -145,7 +156,6 @@
                             <input type="radio" name="alert_content_type" value="default" {% if alert_content_type == 'default' %}checked="checked"{% endif %} />
                             {{ __('Default') }}
                         </label>
-                        <br />
                         <label>
                             <input type="radio" name="alert_content_type" value="custom" {% if alert_content_type == "custom" %}checked="checked"{% endif %} />
                             {{ __('Custom') }}
@@ -163,7 +173,6 @@
                             <input type="radio" name="alert_style" value="default" {% if alert_style == 'default' %}checked="checked"{% endif %} />
                             {{ __('Default') }}
                         </label>
-                        <br />
                         <label>
                             <input type="radio" name="alert_style" value="custom" {% if alert_style == "custom" %}checked="checked"{% endif %} />
                             {{ __('Custom') }}
@@ -176,21 +185,9 @@
                         {{ __('Custom Alert Style') }}
                     </th>
                     <td>
-                        <p>{{ __('Use CSS to style your alert:') }}</p>
+                        <p>{{ __('Use <abbr title="Cascading Style Sheet">CSS</abbr> to style your alert:') | raw }}</p>
                         <label>
                             <textarea class="code" name="alert_custom_style" id="alert_custom_style">{{ alert_custom_style }}</textarea>
-                        </label>
-                    </td>
-                </tr>
-
-                <tr>
-                    <th scope="row">
-                        {{ __('Implied Consent') }}
-                    </th>
-                    <td>
-                        <label>
-                            <input type="checkbox" name="implied_consent" {% if implied_consent %}checked="checked"{% endif %} />
-                            {{ __('If the visitor ignores the alert, imply the visitor has opted in') }}
                         </label>
                     </td>
                 </tr>
@@ -253,7 +250,7 @@
                         {{ __('Custom Alert Code') }}
                     </th>
                     <td>
-                        <p>{{ __('Use HTML to create your own custom alert:') }}</p>
+                        <p>{{ __('Use <abbr title="Hypertext Markup Language">HTML</abbr> to create your own custom alert:') | raw }}</p>
                         <label>
                             <textarea class="code" name="alert_custom_content" id="alert_custom_content">{{ alert_custom_content }}</textarea>
                         </label>
@@ -272,6 +269,7 @@
                         <label>
                             <input type="text" name="required_text" id="required_text" value="{{ required_text }}" />
                         </label>
+                        <span class="description">{{ __('This text is used to indicate required cookies when using the <code>[cookillian cookies]</code> shortcode') | raw }}</span>
                     </td>
                 </tr>
             </tbody>
@@ -387,8 +385,9 @@
                     <td>
                         <label>
                             <input type="checkbox" name="noscript_tag" id="noscript_tag" {% if noscript_tag %}checked="checked"{% endif %} />
-                            {{ __('Provide a dynamic <code>&lt;noscript&gt;</code> section for non-JavaScript browsers') | raw }}
+                            {{ __('Provide a dynamic <code>&lt;noscript&gt;</code> section containing the alert for non-JavaScript browsers') | raw }}
                         </label>
+                        <span class="description">({{ __('Recommended, except when using caching plugins') }})</span>
                     </td>
                 </tr>
                 {% endif %}
@@ -409,14 +408,26 @@
 
                 <tr>
                     <th scope="row">
+                        {{ __('Geolocation Backup Service') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="geo_backup_service" {% if geo_backup_service %}checked="checked"{% endif %} />
+                            {{ __('Use a backup geoloaction service, provided by <a href="http://freegeoip.net/" target="_blank">freegeoip.net</a>, if the default geolocation service has failed.') | raw }}
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
                         {{ __('Debug Mode') }}
                     </th>
                     <td>
                         <label>
                             <input type="checkbox" name="debug_mode" {% if debug_mode %}checked="checked"{% endif %} />
                             {{ __('Enable debug mode') }}
-                            <span class="description">({{ __('An alert will always be shown to logged-in users, and debug details can be seen using the JavaScript console') }})</span>
                         </label>
+                        <span class="description">({{ __('An alert will always be shown to any logged-in user, and debug details can be seen using the JavaScript console') }})</span>
                     </td>
                 </tr>
             </tbody>

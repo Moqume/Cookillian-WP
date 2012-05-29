@@ -12,71 +12,80 @@
 <div style="position: relative; width: 100%;"> {# REL DIV #}
     <form method="post" action="" id="stats_form">
         {{ nonce | raw }}
-        <select name="stat_year">
-            {% for a_year in years %}
-            <option value="{{ a_year }}" {% if a_year == year %}selected="selected"{% endif %}>{{ a_year }}</option>
-            {% endfor %}
-        </select>
+        <div class="tablenav top">
+            <div class="alignleft actions">
+                <select name="stat_year">
+                    {% for a_year in years %}
+                    <option value="{{ a_year }}" {% if a_year == year %}selected="selected"{% endif %}>{{ a_year }}</option>
+                    {% endfor %}
+                </select>
 
-        <input type="submit" name="select-year" class="button action" value="{{ __('Select year') }}" />
+                <input type="submit" name="select-year" class="button action" value="{{ __('View year') }}" title="{{ __('View the statistics for the selected year') }}" />
 
-        <input type="submit" name="clear-stats" id="clear-stats" class="button action" value="{{ __('Clear statistics for selected year') }}" />
-    </form>
+                <input type="submit" name="clear-stats" id="clear-stats" class="button action" value="{{ __('Delete year') }}" title="{{ __('Delete the statistics for the selected year') }}" />
+            </div>
 
-    <h3>{{ __('Results for') }} {{ year }}</h3>
-    <table class="widefat fixed">
-        <thead>
-            <tr>
-                <th scope="col">Country</th>
-                <th scope="col">Alerts Displayed</th>
-                <th scope="col">Opted In</th>
-                <th scope="col">Opted Out</th>
-                <th scope="col">Ignored</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for month_name, month_stat in stats %}
-                {% if thr != month_name %}
-                    {% set thr = month_name %}
-                    <tr>
-                        <th scope="row" colspan="5"><strong>{{ month_name }}</strong></th>
-                    </tr>
-                {% endif %}
+            <div class="alignleft actions">
+                <input type="submit" name="download-stats" class="button action" value="{{ __('Download Statistics') }}" title="{{ __('Download a CSV file with all the statistics') }}" />
+            </div>
+        </div>
 
-                {% for country_abbr, country_stat in month_stat|sort %}
-                    {% set total_display = total_display + country_stat.0 %}
-                    {% set total_optin   = total_optin   + country_stat.1 %}
-                    {% set total_optout  = total_optout  + country_stat.2 %}
-
-                    {% if country_abbr is empty %}
-                        {% set country_name = 'Unknown' %}
-                    {% elseif country_abbr == 'EU' %}
-                        {% set country_name = 'Europe (country unknown)' %}
-                    {% elseif country_abbr == 'AP' %}
-                        {% set country_name = 'Asia/Pacific (country unknown)' %}
-                    {% else %}
-                        {% set country_name  = countries[country_abbr].country %}
+        <h3>{{ __('Results for') }} {{ year }}</h3>
+        <table class="widefat fixed">
+            <thead>
+                <tr>
+                    <th scope="col">Country</th>
+                    <th scope="col">Alerts Displayed</th>
+                    <th scope="col">Opted In</th>
+                    <th scope="col">Opted Out</th>
+                    <th scope="col">Ignored</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for month_name, month_stat in stats %}
+                    {% if thr != month_name %}
+                        {% set thr = month_name %}
+                        <tr>
+                            <th scope="row" colspan="5"><strong>{{ month_name }}</strong></th>
+                        </tr>
                     {% endif %}
 
-                    <tr>
-                        <td>{{ country_name }}</td>
-                        <td>{{ country_stat.0 }}</td>
-                        <td>{{ country_stat.1 }}</td>
-                        <td>{{ country_stat.2 }}</td>
-                        <td>{{ country_stat.0 - (country_stat.1 + country_stat.2) }}</td>
-                    </tr>
+                    {% for country_abbr, country_stat in month_stat|sort %}
+                        {% set total_display = total_display + country_stat.0 %}
+                        {% set total_optin   = total_optin   + country_stat.1 %}
+                        {% set total_optout  = total_optout  + country_stat.2 %}
+
+                        {% if country_abbr is empty %}
+                            {% set country_name = 'Unknown' %}
+                        {% elseif country_abbr == 'EU' %}
+                            {% set country_name = 'Europe (country unknown)' %}
+                        {% elseif country_abbr == 'AP' %}
+                            {% set country_name = 'Asia/Pacific (country unknown)' %}
+                        {% else %}
+                            {% set country_name  = countries[country_abbr].country %}
+                        {% endif %}
+
+                        <tr>
+                            <td>{{ country_name }}</td>
+                            <td>{{ country_stat.0 }}</td>
+                            <td>{{ country_stat.1 }}</td>
+                            <td>{{ country_stat.2 }}</td>
+                            <td>{{ country_stat.0 - (country_stat.1 + country_stat.2) }}</td>
+                        </tr>
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <th scope="col">{{ __('Total:') }}</th>
-                <th scope="col">{{ total_display }}</th>
-                <th scope="col">{{ total_optin }}</th>
-                <th scope="col">{{ total_optout }}</th>
-                <th scope="col">{{ total_display - (total_optin + total_optout) }}</th>
-            </tr>
-        </tfoot>
-    </table>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th scope="col">{{ __('Total:') }}</th>
+                    <th scope="col">{{ total_display }}</th>
+                    <th scope="col">{{ total_optin }}</th>
+                    <th scope="col">{{ total_optout }}</th>
+                    <th scope="col">{{ total_display - (total_optin + total_optout) }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </form>
+
 
 </div> {# REL DIV #}

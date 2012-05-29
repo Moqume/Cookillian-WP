@@ -73,6 +73,7 @@ class Main extends \Pf4wp\WordpressPlugin
         'alert_style'         => 'default',
         'delete_cookies'      => 'before_optout',
         'geo_cache_time'      => 1440, // in minutes
+        'geo_backup_service'  => true,
     );
 
     /** -------------- HELPERS -------------- */
@@ -188,7 +189,7 @@ class Main extends \Pf4wp\WordpressPlugin
             case 'geoplugin' :
                 $remote = wp_remote_get('http://www.geoplugin.net/php.gp?ip=' . $ip);
 
-                if (!is_wp_error($remote)) {
+                if (!is_wp_error($remote) && $remote['response']['code'] == 200) {
                     try {
                         $r = @unserialize($remote['body']);
 
@@ -209,8 +210,24 @@ class Main extends \Pf4wp\WordpressPlugin
         }
 
         // Ensure it's an empty string if no valid country was found (for type check when retrieving the transient)
-        if (empty($result) || $result == 'XX')
+        if (empty($result) || $result == 'XX' || strlen($result) > 2)
             $result = '';
+
+        if ($result == '' && $this->options->geo_backup_service) {
+            // Use the backup service to verify that the IP is indeed unknown, and not a lookup failure @since 1.0.29
+            $remote = wp_remote_get('http://freegeoip.net/json/' . $ip);
+
+            // Note: will return 403 if 1000 requests per hour is exceeded
+            if (!is_wp_error($remote) && $remote['response']['code'] == 200) {
+                try {
+                    $r = @json_decode($remote['body']);
+
+                    $result = (isset($r->country_code) && $r->country_code != 'RD' && !empty($r->country_code)) ? $r->country_code : '';
+                } catch (\Exception $e) {
+                    $result = '';
+                }
+            }
+        }
 
         // Ensure it's upper-case
         $result = strtoupper($result);
@@ -720,6 +737,7 @@ class Main extends \Pf4wp\WordpressPlugin
      * Resets the stats
      *
      * @param int $year The year to reset the statistics for (optional, by default ALL statistics are cleared)
+     * @since 1.0.23
      */
     protected function resetStats($year = null)
     {
@@ -735,6 +753,38 @@ class Main extends \Pf4wp\WordpressPlugin
 
                 $this->options->stats = $stats;
             }
+        }
+    }
+
+    /**
+     * Converts stats to a CSV and outputs it for download
+     *
+     * @since 1.0.28
+     */
+    protected function downloadStats()
+    {
+        $stats     = $this->options->stats;
+        $csv_stats = array(
+            array('Date', 'Country Code', 'Country Name', 'Displayed', 'Opted In', 'Opted Out', 'Ignored')
+        );
+
+        if ($fh = fopen('php://output', 'w')) {
+            header('Content-Type: text/csv' );
+            header('Content-Disposition: attachment;filename=stats.csv');
+            fputcsv($fh, array('Date', 'Country Code', 'Country Name', 'Displayed', 'Opted In', 'Opted Out', 'Ignored'));
+
+            // No, it's not pretty, but it does the job.
+            foreach ($stats as $year => $stats_year_values) {
+                foreach ($stats_year_values as $month => $stats_month_values) {
+                    foreach ($stats_month_values as $country => $values) {
+                        $date = new \DateTime($year . ' ' . $month);
+                        fputcsv($fh, array($date->format('Y/m/d'), $country, $this->getCountryName($country), $values[0], $values[1], $values[2], $values[0] - ($values[1] + $values[2])));
+                    }
+                }
+            }
+
+            fclose($fh);
+            die();
         }
     }
 
@@ -1127,7 +1177,7 @@ class Main extends \Pf4wp\WordpressPlugin
                     'implied_consent' => $this->hasImpliedConsent(),
                     'opted_out'       => $this->optedOut(),
                     'opted_in'        => $this->optedIn(),
-                    'is_manual'       => ($this->options->alert_show == 'manual'),           // Used internally
+                    'is_manual'       => ($this->options->alert_show == 'manual'), // Used internally
                     'has_nst'         => ($this->options->noscript_tag && $cookies_blocked && !$this->optedOut() && !$this->hasActiveCachingPlugin()), // Used internally
                 );
 
@@ -1507,6 +1557,7 @@ class Main extends \Pf4wp\WordpressPlugin
                 'alert_custom_style'    => 'string',
                 'delete_cookies'        => array('in_array', array('before_optout', 'after_optout')),
                 'geo_cache_time'        => 'int',
+                'geo_backup_service'    => 'bool',
             ));
 
             // Extra sanity check for geo_cache_time, one minute is absolute minimum
@@ -1611,7 +1662,8 @@ class Main extends \Pf4wp\WordpressPlugin
             'alert_show', 'alert_content_type', 'alert_content', 'alert_heading', 'alert_ok', 'alert_no',
             'alert_custom_content', 'required_text', 'script_header', 'script_footer', 'debug_mode',
             'js_wrap', 'show_on_unknown_location', 'maxmind_db', 'maxmind_db_v6', 'implied_consent',
-            'noscript_tag', 'alert_style', 'alert_custom_style', 'delete_cookies', 'geo_cache_time'
+            'noscript_tag', 'alert_style', 'alert_custom_style', 'delete_cookies', 'geo_cache_time',
+            'geo_backup_service',
         ));
 
         $vars = array_merge(array(
@@ -1715,6 +1767,11 @@ class Main extends \Pf4wp\WordpressPlugin
                     $year = intval($_POST['stat_year']);
 
                 $this->resetStats($year);
+            }
+
+            if (isset($_POST['download-stats'])) {
+                // Download statistics
+                $this->downloadStats();
             }
         }
     }

@@ -25,9 +25,9 @@ With the included statistics, you can see how many visitors have decided to opt 
 
 = Features =
 
-* Selective filtering/alerts based on the visitor's originating country
-* Automatic alerts, or manually displayed using a WordPress filter or shortcode
-* Fully customizable alert/information about cookies
+* Selective cookie filtering and alerts based on the visitor's originating country
+* Automatic alerts, or manually displayed using a WordPress filter, API or shortcode
+* Fully customizable alert text and styling
 * Optional JavaScript loading if cookies are permitted
 * Support for Cookie-based PHP Sessions
 * Define cookies that are required for the operation of the website
@@ -36,10 +36,11 @@ With the included statistics, you can see how many visitors have decided to opt 
 * Support for [geoPlugin](http://www.geoplugin.com) geolocation service
 * Support for [CloudFlare](http://www.cloudflare.com) geolocation HTTP headers
 * Support for [MaxMind](http://www.maxmind.com) geolocation database or Apache module/NginX GeoIP module
-* Exposed PHP/WordPress Filters and JavaScript variables regarding cookie permissions, opt-in and opt-out for complex sites
+* Backup geoloaction service, should the default geolocation service fail
+* JavaScript and PHP API
 * Statistics to track the impact of the EC Directive
 * Debug mode for web development and testing
-* Supports caching plugins such as WP Super Cache
+* Supports caching plugins, such as WP Super Cache
 * Support for the DNT/Do Not Track browser headers (http://donottrack.us)
 * Support for "Implied Consent"
 
@@ -68,12 +69,14 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.0.27 =
+= 1.0.29 =
 * __Added:__ Support for "Implied Consent"
 * __Added:__ Support for caching plugins, such as WP Super Cache and W3 Total Cache
 * __Added:__ Option to provide custom styling for the alert from the menu
 * __Added:__ Option to delete cookies before or after the visitor has opted out
 * __Added:__ Option to adjust geolocation cache time, as well as clear it
+* __Added:__ Backup geoloaction service, provided by [freegeoip.net](http://www.freegeoip.net), should the default geoloaction service fail.
+* __Added:__ Export option (CSV) for statistics
 * Fixed: Fixed a bug that overwrote existing cookies from the __Cookies__ listing
 * Fixed: Empty country name on "Unknown" country in statistics
 * Fixed: If a generic "EU" or "AP" is retured by the geolocation service, determine if selected countries falls within that region
