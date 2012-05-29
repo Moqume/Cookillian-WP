@@ -9,7 +9,7 @@
     <form method="post" action="" id="settings_form" enctype="multipart/form-data">
         {{ nonce | raw }}
 
-        <h3>Geolocation</h3>
+        <h3>{{ __('Geolocation') }}</h3>
         <table class="form-table">
             <tbody>
                 <tr>
@@ -67,7 +67,7 @@
         </table>
 
         <div class="maxmind_settings">
-            <h3>MaxMind Settings</h3>
+            <h3>{{ __('MaxMind Settings') }}</h3>
             <table class="form-table">
                 <tbody>
                     <tr>
@@ -115,7 +115,7 @@
             </table>
         </div>
 
-        <h3>Alert Settings</h3>
+        <h3>{{ __('Alert Settings') }}</h3>
         <table class="form-table">
             <tbody>
                 <tr>
@@ -197,7 +197,7 @@
             </tbody>
         </table>
 
-        <h3>Content</h3>
+        <h3>{{ __('Content') }}</h3>
         <table class="form-table alert_normal">
             <tbody>
                 <tr>
@@ -277,7 +277,7 @@
             </tbody>
         </table>
 
-        <h3>JavaScript</h3>
+        <h3>{{ __('JavaScript') }}</h3>
         <table class="form-table script_header_footer">
             <tbody>
                 <tr>
@@ -322,8 +322,8 @@
             </tbody>
         </table>
 
-        <h3>Advanced Options</h3>
-        <table class="form-table">
+        <h3>{{ __('Advanced Options') }}</h3>
+        <table id="advanced_options" class="form-table">
             <tbody>
                 <tr>
                     <th scope="row">
@@ -382,7 +382,7 @@
                 {% if not has_caching %}
                 <tr>
                     <th scope="row">
-                        {{ __('non-Javascript Support') }}
+                        {{ __('Non-JavaScript Support') }}
                     </th>
                     <td>
                         <label>
@@ -392,6 +392,20 @@
                     </td>
                 </tr>
                 {% endif %}
+
+                <tr>
+                    <th scope="row">
+                        {{ __('Geolocation Cache') }}
+                    </th>
+                    <td>
+                        <label>
+                            {{ __('Keep geolocation lookups in cache for up to') }}
+                            <input type="number" step="60" id="geo_cache_time" name="geo_cache_time" value="{{ geo_cache_time }}"/>
+                            {{ __('minutes.') }}
+                        </label>
+                        <input type="submit" class="button button-action" name="clear-geo-cache" id="clear_geo_cache" value="{{ __('Clear cache now') }}" />
+                    </td>
+                </tr>
 
                 <tr>
                     <th scope="row">

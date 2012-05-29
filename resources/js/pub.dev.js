@@ -115,6 +115,34 @@ if (typeof cookillian === "undefined") {
                     cookillian.getAjaxData('displayed', true, function() {});
                 }
             }
+        },
+
+        /**
+         * Deletes the cookies (user func)
+         */
+        deleteCookies : function() {
+            return cookillian.getAjaxData('delete_cookies', true);
+        },
+
+        /**
+         * Opts a visitor in
+         */
+        optIn : function() {
+            return cookillian.getAjaxData('opt_in', true);
+        },
+
+        /**
+         * Opts a visitor out
+         */
+        optOut : function() {
+            return cookillian.getAjaxData('opt_out', true);
+        },
+
+        /**
+         * Resets the user's choice of opt in or out
+         */
+        resetOptinout : function() {
+            return cookillian.getAjaxData('reset_optinout', true);
         }
     });
 

@@ -72,6 +72,7 @@ class Main extends \Pf4wp\WordpressPlugin
         'noscript_tag'        => true,
         'alert_style'         => 'default',
         'delete_cookies'      => 'before_optout',
+        'geo_cache_time'      => 1440, // in minutes
     );
 
     /** -------------- HELPERS -------------- */
@@ -170,7 +171,7 @@ class Main extends \Pf4wp\WordpressPlugin
         if (empty($ip))
             return '';
 
-        $cache_id = $this->short_name . '_ip_' . md5($ip);
+        $cache_id = $this->short_name . '_ip_' . substr(md5($ip), 0, 8);
 
         // First attempt to fetch from local NP cache (fastest)
         if (isset($this->np_cache[$cache_id]))
@@ -215,8 +216,8 @@ class Main extends \Pf4wp\WordpressPlugin
         $result = strtoupper($result);
 
         // Save into caches
-        set_site_transient($cache_id, $result, 3600); // One day (note: empty results are re-detected ASAP)
-        $this->np_cache[$cache_id] = $result;         // Non-persistent cache, just for the life of this object
+        set_site_transient($cache_id, $result, $this->options->geo_cache_time * 60); // Note: empty results are re-detected ASAP
+        $this->np_cache[$cache_id] = $result; // Non-persistent cache, just for the life of this object
 
         return $result;
     }
@@ -741,8 +742,9 @@ class Main extends \Pf4wp\WordpressPlugin
      * Processes a response to the question of permitting cookies
      *
      * @param int $answer 0 = opt out, 1 = opt in, 2 = reset
+     * @param bool $redirect Set to `true` if the visitor needs to be redirected back to original location
      */
-    protected function processResponse($answer)
+    protected function processResponse($answer, $redirect = true)
     {
         $opt_in_or_out = '';
         $redir_url     = (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : add_query_arg(array($this->short_name . static::RESP_ID => false)));
@@ -753,8 +755,12 @@ class Main extends \Pf4wp\WordpressPlugin
                 setcookie($this->short_name . static::OPTIN_ID, '', time() - 3600, '/');
                 setcookie($this->short_name . static::OPTOUT_ID, '', time() - 3600, '/');
 
-                // Send the visitor back now
-                wp_redirect($redir_url); die();
+                if ($redirect) {
+                    // Send the visitor back now
+                    wp_redirect($redir_url); die();
+                } else {
+                    return;
+                }
 
                 break;
 
@@ -778,8 +784,10 @@ class Main extends \Pf4wp\WordpressPlugin
         // Set a cookie with the visitor's response
         Cookies::set($opt_in_or_out, 1, strtotime(static::COOKIE_LIFE), true, false, '/');
 
-        // And send the visitor back to where they were, if possible
-        wp_redirect($redir_url); die();
+        if ($redirect) {
+            // And send the visitor back to where they were, if possible
+            wp_redirect($redir_url); die();
+        }
     }
 
     /**
@@ -1033,15 +1041,22 @@ class Main extends \Pf4wp\WordpressPlugin
         add_shortcode($this->short_name, array($this, 'onShortCode'));
 
         // Filters
-        add_filter($this->short_name . '_alert',           array($this, 'onFilterAlert'));
-        add_filter($this->short_name . '_blocked_cookies', array($this, 'onFilterBlockedCookies')); // @since 1.0.25
-        add_filter($this->short_name . '_deleted_cookies', array($this, 'onFilterDeletedCookies'));
-        add_filter($this->short_name . '_opted_in',        array($this, 'onFilterOptedIn'));
-        add_filter($this->short_name . '_opted_out',       array($this, 'onFilterOptedOut'));
-        add_filter($this->short_name . '_implied_consent', array($this, 'onFilterImpliedConsent')); // @since 1.0.23
+        add_filter($this->short_name . '_alert',             array($this, 'onFilterAlert'));
+        add_filter($this->short_name . '_blocked_cookies',   array($this, 'onFilterBlockedCookies'));
+        add_filter($this->short_name . '_deleted_cookies',   array($this, 'onFilterDeletedCookies'));   // @since 1.0.25
+        add_filter($this->short_name . '_opted_in',          array($this, 'onFilterOptedIn'));
+        add_filter($this->short_name . '_opted_out',         array($this, 'onFilterOptedOut'));
+        add_filter($this->short_name . '_implied_consent',   array($this, 'onFilterImpliedConsent'));   // @since 1.0.23
+        add_filter($this->short_name . '_do_delete_cookies', array($this, 'onFilterDoDeleteCookies'));  // @since 1.0.26
+        add_filter($this->short_name . '_do_opt_in',         array($this, 'onFilterDoOptIn'));          // @since 1.0.26
+        add_filter($this->short_name . '_do_opt_out',        array($this, 'onFilterDoOptOut'));         // @since 1.0.26
+        add_filter($this->short_name . '_do_reset_optinout', array($this, 'onFilterDoResetOptinout'));  // @since 1.0.26
 
         // Cookies are handled as early as possible here, disabling sessions, etc.
         $this->cookies_blocked = $this->handleCookies();
+
+        // Include the api_helpers file
+        require_once($this->getPluginDir() . 'inc/api_helpers.php');
     }
 
     /**
@@ -1066,7 +1081,9 @@ class Main extends \Pf4wp\WordpressPlugin
         wp_enqueue_script($this->getName() . '-admin', $js_url . 'admin' . $debug . '.js', array('jquery'), $version);
 
         wp_localize_script($this->getName() . '-admin', $this->getName() . '_translate', array(
-            'are_you_sure' => __('Are you sure?', $this->getName()),
+            'add_cookie_group'  => __('Add new group', $this->getName()),
+            'sel_cookie_group'  => __('Select a group', $this->getName()),
+            'are_you_sure'      => __('Are you sure?', $this->getName()),
         ));
     }
 
@@ -1156,6 +1173,44 @@ class Main extends \Pf4wp\WordpressPlugin
             case 'displayed' :
                 // Lets the plugin know that an alert was displayed
                 $this->addStat('displayed');
+
+                $this->ajaxResponse(true);
+                break;
+
+            case 'delete_cookies' :
+                // Delete the cookies
+                $this->deleteCookies();
+
+                $this->ajaxResponse(true);
+                break;
+
+            case 'opt_out' :
+                // Perform an opt out
+                $this->processResponse(0, false);
+
+                $this->ajaxResponse(true);
+                break;
+
+            case 'opt_in' :
+                // Perform an opt in
+                $this->processResponse(1, false);
+
+                $this->ajaxResponse(true);
+                break;
+
+            case 'reset_optinout' :
+                // Reset the opt in or opt out choice
+                $this->processResponse(2, false);
+
+                $this->ajaxResponse(true);
+                break;
+
+            case 'clear_geo_cache' :
+                // Clears the Geolocation cache - PRIVILEGED CALL
+                if (!current_user_can('edit_plugins'))
+                    return;
+
+                $this->clearTransients();
 
                 $this->ajaxResponse(true);
                 break;
@@ -1288,6 +1343,53 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
+     * Filter used as a function to delete cookies
+     *
+     * @param mixed $original Original value passed to the filter (unused)
+     */
+    public function onFilterDoDeleteCookies($original)
+    {
+        $this->deleteCookies();
+        return true;
+    }
+
+    /**
+     * Filter used as a function to opt in
+     *
+     * @param mixed $original Original value passed to the filter (unused)
+     */
+    public function onFilterDoOptIn($original)
+    {
+        $this->processResponse(1, false);
+
+        return true;
+    }
+
+    /**
+     * Filter used as a function to opt out
+     *
+     * @param mixed $original Original value passed to the filter (unused)
+     */
+    public function onFilterDoOptOut($original)
+    {
+        $this->processResponse(0, false);
+
+        return true;
+    }
+
+    /**
+     * Filter used as a function to reset an opt in or opt out choice
+     *
+     * @param mixed $original Original value passed to the filter (unused)
+     */
+    public function onFilterDoResetOptinout($original)
+    {
+        $this->processResponse(0, false);
+
+        return true;
+    }
+
+    /**
      * Handles shortcodes
      *
      * Shortcodes:
@@ -1371,6 +1473,13 @@ class Main extends \Pf4wp\WordpressPlugin
             if (!wp_verify_nonce($_POST['_nonce'], 'onSettingsMenu'))
                 wp_die(__('You do not have permission to do that [nonce].', $this->getName()));
 
+            if (isset($_POST['clear-geo-cache'])) {
+                // All we need to do is clear the transients
+                $this->clearTransients();
+
+                return;
+            }
+
             // Save
             $this->options->load($_POST, array(
                 'auto_add_cookies'      => 'bool',
@@ -1397,7 +1506,12 @@ class Main extends \Pf4wp\WordpressPlugin
                 'alert_style'           => array('in_array', array('default', 'custom')),
                 'alert_custom_style'    => 'string',
                 'delete_cookies'        => array('in_array', array('before_optout', 'after_optout')),
+                'geo_cache_time'        => 'int',
             ));
+
+            // Extra sanity check for geo_cache_time, one minute is absolute minimum
+            if ($this->options->geo_cache_time < 1)
+                $this->options->geo_cache_time = 1;
 
             // Save country selections
             $this->options->countries = (isset($_POST['countries'])) ? $_POST['countries'] : array();
@@ -1497,7 +1611,7 @@ class Main extends \Pf4wp\WordpressPlugin
             'alert_show', 'alert_content_type', 'alert_content', 'alert_heading', 'alert_ok', 'alert_no',
             'alert_custom_content', 'required_text', 'script_header', 'script_footer', 'debug_mode',
             'js_wrap', 'show_on_unknown_location', 'maxmind_db', 'maxmind_db_v6', 'implied_consent',
-            'noscript_tag', 'alert_style', 'alert_custom_style', 'delete_cookies'
+            'noscript_tag', 'alert_style', 'alert_custom_style', 'delete_cookies', 'geo_cache_time'
         ));
 
         $vars = array_merge(array(
@@ -1568,11 +1682,18 @@ class Main extends \Pf4wp\WordpressPlugin
     {
         $known_cookies = $this->deepStripSlashes($this->options->known_cookies);
 
+        // Retrieve a sorted list of group names
+        $groups = array();
+        array_walk_recursive($known_cookies, function($v, $k) use(&$groups) { if($k == 'group') array_push($groups, $v); });
+        $groups = array_unique($groups);
+        sort($groups);
+
         $vars = array(
             'nonce'              => wp_nonce_field('onCookiesMenu', '_nonce', true, false),
             'submit_button'      => get_submit_button(null, 'primary', 'submit', false),
             'known_cookies'      => $known_cookies,
             'known_cookie_count' => count($known_cookies),
+            'groups'             => $groups,
             'is_rtl'             => is_rtl(),
             'action_url'         => add_query_arg(array()),
         );

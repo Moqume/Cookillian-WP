@@ -81,6 +81,12 @@
     background-color: #f9f0f9;
 }
 
+.cookie_table .group-dropdown select {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
 .ip-info {
     padding: 10px;
     border: 1px solid #ccc;
@@ -93,6 +99,10 @@
 #maxmind_db,
 #maxmind_db_v6 {
     width: 350px;
+}
+
+#geo_cache_time {
+    width: 70px;
 }
 
 #required_text,

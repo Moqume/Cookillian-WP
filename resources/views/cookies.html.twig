@@ -9,9 +9,9 @@
     <form method="post" action="{{ action_url }}" id="cookies_form">
         {{ nonce | raw }}
 
-        <div class="tablenav top">
+        <div class="tablenav top hide-if-no-js ">
             <div class="alignleft actions">
-                <a href="#" id="add_new_cookie_btn" class="button-secondary action hide-if-no-js">Add New Cookie</a>
+                <a href="#" id="add_new_cookie_btn" class="button-secondary action">Add New Cookie</a>
             </div>
             <div class="alignright">
                 <span class="displaying-num">{{ known_cookie_count }} cookies</span>
@@ -38,24 +38,57 @@
                                 {% for cookie_name,cookie_value in known_cookies %}
                                 <tr id="row{{ loop.index }}">
                                     <td class="col_name">
-                                        <input type="text" value="{{ cookie_name }}" name="known_cookies[{{ cookie_name }}][name]" placeholder="Enter the cookie name here" />
+                                        <input type="text" value="{{ cookie_name }}" name="known_cookies[{{ cookie_name }}][name]" placeholder="{{ __('Enter the cookie name here') }}" />
                                     </td>
                                     <td class="col_desc">
                                         <textarea name="known_cookies[{{ cookie_name }}][desc]">{{ cookie_value.desc }}</textarea>
                                     </td>
                                     <td class="col_group">
-                                        <input type="text" value="{{ cookie_value.group }}" name="known_cookies[{{ cookie_name }}][group]" />
+                                        <div class="hide-if-no-js group-dropdown">
+                                            <select>
+                                            {% for group in groups %}
+                                                <option value="{{ group }}" {% if group == cookie_value.group %}selected="selected"{% endif %}>{{ group }}</option>
+                                            {% endfor %}
+                                            </select>
+                                        </div>
+                                        <input class="hide-if-js" type="text" value="{{ cookie_value.group }}" name="known_cookies[{{ cookie_name }}][group]" />
+                                        <a href="#" class="edit-group hide-if-no-js add">{{ __('Add new group') }}</a>
                                     </td>
                                     <td class="col_req">
                                         <input type="checkbox" name="known_cookies[{{ cookie_name }}][required]" {% if cookie_value.required %}checked="checked"{% endif %} />
                                     </td>
                                     <td class="col_del">
                                         <input  type="checkbox" class="delete-cb hide-if-js" name="known_cookies[{{ cookie_name }}][delete]" />
-                                        <button class="delete-btn button-secondary hide-if-no-js" data-row="row{{ loop.index }}" title="{{ __('Click to remove the cookie from this list, save changes to make the removal permanent') }}">{{ __('Remove') }}</button>
+                                        <button class="delete-btn button-secondary hide-if-no-js" data-row="row{{ loop.index }}" title="{{ __('Click to remove, save changes to make the removal permanent') }}">{{ __('Remove') }}</button>
                                     </td>
                                 </tr>
                                 {% endfor %}
 
+                                <tr id="row_clonable" style="display:none">
+                                    <td class="col_name">
+                                        <input type="text" value="" name="" placeholder="Enter the cookie name here" />
+                                    </td>
+                                    <td class="col_desc">
+                                        <textarea name=""></textarea>
+                                    </td>
+                                    <td class="col_group">
+                                        <div class="hide-if-no-js group-dropdown">
+                                            <select>
+                                            {% for group in groups %}
+                                                <option value="{{ group }}" {% if loop.index == 1 %}selected="selected"{% endif %}>{{ group }}</option>
+                                            {% endfor %}
+                                            </select>
+                                        </div>
+                                        <input class="hide-if-js" type="text" value="{{ groups[0] }}" name="" />
+                                        <a href="#" class="edit-group hide-if-no-js add">{{ __('Add new group') }}</a>
+                                    </td>
+                                    <td class="col_req">
+                                        <input type="checkbox" name="" />
+                                    </td>
+                                    <td class="col_del">
+                                        <button class="delete-btn button-secondary hide-if-no-js" data-row="" title="{{ __('Click to remove') }}">{{ __('Remove') }}</button>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
