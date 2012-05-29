@@ -391,7 +391,7 @@ class Main extends \Pf4wp\WordpressPlugin
     /**
      * Deletes any cookies present
      */
-    protected function deleteCookies()
+    public function deleteCookies()
     {
         $session_name = session_name();
 
@@ -794,7 +794,7 @@ class Main extends \Pf4wp\WordpressPlugin
      * @param int $answer 0 = opt out, 1 = opt in, 2 = reset
      * @param bool $redirect Set to `true` if the visitor needs to be redirected back to original location
      */
-    protected function processResponse($answer, $redirect = true)
+    public function processResponse($answer, $redirect = true)
     {
         $opt_in_or_out = '';
         $redir_url     = (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : add_query_arg(array($this->short_name . static::RESP_ID => false)));
@@ -804,35 +804,31 @@ class Main extends \Pf4wp\WordpressPlugin
                 // Reset/clear previous opt-in or out
                 setcookie($this->short_name . static::OPTIN_ID, '', time() - 3600, '/');
                 setcookie($this->short_name . static::OPTOUT_ID, '', time() - 3600, '/');
-
-                if ($redirect) {
-                    // Send the visitor back now
-                    wp_redirect($redir_url); die();
-                } else {
-                    return;
-                }
-
                 break;
 
             case 1 :
                 // Opt In
-                $this->addStat('optin');
                 $opt_in_or_out = $this->short_name . static::OPTIN_ID;
+
+                if (Cookies::get($opt_in_or_out, false) === false)
+                    $this->addStat('optin'); // Visitor wasn't click-happy, so add the stat
+
                 break;
 
             case 0 :
                 // Opt Out
-                $this->addStat('optout');
                 $opt_in_or_out = $this->short_name . static::OPTOUT_ID;
+
+                if (Cookies::get($opt_in_or_out, false) === false)
+                    $this->addStat('optout');
+
                 break;
         }
 
-        // User tried to be funny and we lack humor
-        if (empty($opt_in_or_out))
-            return;
-
-        // Set a cookie with the visitor's response
-        Cookies::set($opt_in_or_out, 1, strtotime(static::COOKIE_LIFE), true, false, '/');
+        if (!empty($opt_in_or_out)) {
+            // Set a cookie with the visitor's response
+            Cookies::set($opt_in_or_out, 1, strtotime(static::COOKIE_LIFE), true, false, '/');
+        }
 
         if ($redirect) {
             // And send the visitor back to where they were, if possible
@@ -1093,20 +1089,14 @@ class Main extends \Pf4wp\WordpressPlugin
         // Filters
         add_filter($this->short_name . '_alert',             array($this, 'onFilterAlert'));
         add_filter($this->short_name . '_blocked_cookies',   array($this, 'onFilterBlockedCookies'));
-        add_filter($this->short_name . '_deleted_cookies',   array($this, 'onFilterDeletedCookies'));   // @since 1.0.25
         add_filter($this->short_name . '_opted_in',          array($this, 'onFilterOptedIn'));
         add_filter($this->short_name . '_opted_out',         array($this, 'onFilterOptedOut'));
-        add_filter($this->short_name . '_implied_consent',   array($this, 'onFilterImpliedConsent'));   // @since 1.0.23
-        add_filter($this->short_name . '_do_delete_cookies', array($this, 'onFilterDoDeleteCookies'));  // @since 1.0.26
-        add_filter($this->short_name . '_do_opt_in',         array($this, 'onFilterDoOptIn'));          // @since 1.0.26
-        add_filter($this->short_name . '_do_opt_out',        array($this, 'onFilterDoOptOut'));         // @since 1.0.26
-        add_filter($this->short_name . '_do_reset_optinout', array($this, 'onFilterDoResetOptinout'));  // @since 1.0.26
 
         // Cookies are handled as early as possible here, disabling sessions, etc.
         $this->cookies_blocked = $this->handleCookies();
 
         // Include the api_helpers file
-        require_once($this->getPluginDir() . 'inc/api_helpers.php');
+        require_once $this->getPluginDir() . 'inc/api_helpers.php';
     }
 
     /**
@@ -1339,47 +1329,6 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
-     * Filter for the hasImpliedConsent() function
-     *
-     * @param mixed $original Original value passed to the filter (ignored)
-     * @since 1.0.23
-     */
-    public function onFilterImpliedConsent($original)
-    {
-        return $this->hasImpliedConsent();
-    }
-
-    /**
-     * Filter for the optedIn() function
-     *
-     * @param mixed $original Original value passed to the filter (ignored)
-     */
-    public function onFilterOptedIn($original)
-    {
-        return $this->optedIn();
-    }
-
-    /**
-     * Filter for the OptedOut() function
-     *
-     * @param mixed $original Original value passed to the filter (ignored)
-     */
-    public function onFilterOptedOut($original)
-    {
-        return $this->optedOut();
-    }
-
-    /**
-     * Filter to return if cookies were deleted
-     *
-     * @param mixed $original Original value passed to the filter (ignored)
-     */
-    public function onFilterDeletedCookies($original)
-    {
-        return $this->hasDeletedCookies();
-    }
-
-    /**
      * Filter to return the $blocked_cookies status
      *
      * @param mixed $original Original value passed to the filter
@@ -1393,50 +1342,23 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
-     * Filter used as a function to delete cookies
+     * Filter for the optedIn() function
      *
-     * @param mixed $original Original value passed to the filter (unused)
+     * @param mixed $original Original value passed to the filter (ignored)
      */
-    public function onFilterDoDeleteCookies($original)
+    public function onFilterOptedIn($original)
     {
-        $this->deleteCookies();
-        return true;
+        return $this->optedIn();
     }
 
     /**
-     * Filter used as a function to opt in
+     * Api for the OptedOut() function
      *
-     * @param mixed $original Original value passed to the filter (unused)
+     * @param mixed $original Original value passed to the filter (ignored)
      */
-    public function onFilterDoOptIn($original)
+    public function onFilterOptedOut($original)
     {
-        $this->processResponse(1, false);
-
-        return true;
-    }
-
-    /**
-     * Filter used as a function to opt out
-     *
-     * @param mixed $original Original value passed to the filter (unused)
-     */
-    public function onFilterDoOptOut($original)
-    {
-        $this->processResponse(0, false);
-
-        return true;
-    }
-
-    /**
-     * Filter used as a function to reset an opt in or opt out choice
-     *
-     * @param mixed $original Original value passed to the filter (unused)
-     */
-    public function onFilterDoResetOptinout($original)
-    {
-        $this->processResponse(0, false);
-
-        return true;
+        return $this->optedOut();
     }
 
     /**

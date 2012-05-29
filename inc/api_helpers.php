@@ -29,13 +29,6 @@ function cookillian_blocked_cookies()
 }
 endif;
 
-if (!function_exists('cookillian_deleted_cookies')) :
-function cookillian_deleted_cookies()
-{
-    return Main::instance()->onFilterDeletedCookies(false);
-}
-endif;
-
 if (!function_exists('cookillian_opted_in')) :
 function cookillian_opted_in()
 {
@@ -50,11 +43,20 @@ function cookillian_opted_out()
 }
 endif;
 
+// ---
+
+if (!function_exists('cookillian_deleted_cookies')) :
+function cookillian_deleted_cookies()
+{
+    return Main::instance()->hasDeletedCookies();
+}
+endif;
+
 // @since 1.0.23
 if (!function_exists('cookillian_implied_consent')) :
 function cookillian_implied_consent()
 {
-    return Main::instance()->onFilterImpliedConsent(false);
+    return Main::instance()->hasImpliedConsent();
 }
 endif;
 
@@ -62,7 +64,7 @@ endif;
 if (!function_exists('cookillian_do_delete_cookies')) :
 function cookillian_do_delete_cookies()
 {
-    return Main::instance()->onFilterDoDeleteCookies(false);
+    return Main::instance()->deleteCookies();
 }
 endif;
 
@@ -70,7 +72,7 @@ endif;
 if (!function_exists('cookillian_do_opt_in')) :
 function cookillian_do_opt_in()
 {
-    return Main::instance()->onFilterDoOptIn(false);
+    return Main::instance()->processResponse(1, false);
 }
 endif;
 
@@ -78,7 +80,7 @@ endif;
 if (!function_exists('cookillian_do_opt_out')) :
 function cookillian_do_opt_out()
 {
-    return Main::instance()->onFilterDoOptOut(false);
+    return Main::instance()->processResponse(0, false);
 }
 endif;
 
@@ -86,6 +88,6 @@ endif;
 if (!function_exists('cookillian_do_reset_optinout')) :
 function cookillian_do_reset_optinout()
 {
-    return Main::instance()->onFilterDoResetOptinout(false);
+    return Main::instance()->processResponse(2, false);
 }
 endif;
