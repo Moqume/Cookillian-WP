@@ -1,0 +1,68 @@
+{#
+    Copyright (c) 2012 Mike Green <myatus@gmail.com>
+
+    For the full copyright and license information, please view the LICENSE
+    file that was distributed with this source code.
+#}
+
+<div id="cookillian_new_cookies_dash">
+    <h4>{{ __('New Cookies') }}</h4>
+    {% if new_cookies is not empty %}
+        <p>
+            {{ __('The following new cookie(s) were detected:') }}
+            <em>
+                {{ new_cookies }}
+            </em>
+            &ndash;
+            <a href="{{ cookie_url }}" title="{{ __('Edit the cookies') }}">{{ __('Edit') }}</a>
+        </p>
+
+
+    {% else %}
+        <p>{{ __('No new cookies detected') }}</p>
+    {% endif %}
+</div>
+
+<div id="cookillian_stats_dash">
+    <h4>{{ __('Top ' ~ max_stats ~ ' Statistics for') }} {{ month }} {{ year }}</h4>
+    {% if stats is not empty %}
+        <br />
+        <table class="widefat">
+            <thead>
+                <tr>
+                    <th scope="col">{{ __('Country') }}</th>
+                    <th scope="col">Alerts Displayed</th>
+                    <th scope="col">Opted In</th>
+                    <th scope="col">Opted Out</th>
+                    <th scope="col">Ignored</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for country_abbr, country_stat in stats %}
+                    {% if country_abbr is empty %}
+                        {% set country_name = 'Unknown' %}
+                    {% elseif country_abbr == 'EU' %}
+                        {% set country_name = 'Europe (country unknown)' %}
+                    {% elseif country_abbr == 'AP' %}
+                        {% set country_name = 'Asia/Pacific (country unknown)' %}
+                    {% else %}
+                        {% set country_name  = countries[country_abbr].country %}
+                    {% endif %}
+
+                    <tr>
+                        <td>{{ country_name }}</td>
+                        <td>{{ country_stat.0 }}</td>
+                        <td>{{ country_stat.1 }}</td>
+                        <td>{{ country_stat.2 }}</td>
+                        <td>{{ country_stat.0 - (country_stat.1 + country_stat.2) }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if max_stats > 0 %}<p><a href="{{ stats_url }}" title="See more statistics">{{ __('See more') }} &hellip;</a></p>{% endif %}
+    {% else %}
+        <p>{{ __('No statistics reported yet. Not to worry, they\'ll come soon.') }}</p>
+    {% endif %}
+
+</div>

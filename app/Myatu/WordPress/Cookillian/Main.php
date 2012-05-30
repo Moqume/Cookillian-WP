@@ -21,9 +21,10 @@ class Main extends \Pf4wp\WordpressPlugin
     const OPTOUT_ID   = '_opt_out';
     const RESP_ID     = '_resp';
     const COOKIE_LIFE = '+3 years';
+    const UNKNOWN     = 'Unknown';
 
     // Non-persistent cache
-    protected $np_cache = array();
+    protected $np_cache = array('known_cookies' => array());
 
     // Common crawlers/spiders
     protected $crawlers = array(
@@ -45,6 +46,12 @@ class Main extends \Pf4wp\WordpressPlugin
     protected $maxmind_db;
     protected $maxmind_db_v6;
 
+    // Slug for the cookie menu
+    public $cookie_menu_slug = array();
+
+    // Slug for the stats menu
+    public $stats_menu_slug = array();
+
     // Shortname - pf4wp
     public $short_name = 'cookillian';
 
@@ -54,7 +61,6 @@ class Main extends \Pf4wp\WordpressPlugin
     // Default options - Pf4wp
     protected $default_options = array(
         'geo_service'         => 'geoplugin',
-        'cookie_groups'       => array('Unknown'),
         'auto_add_cookies'    => true,
         'delete_root_cookies' => true,
         'countries'           => array(),
@@ -74,6 +80,7 @@ class Main extends \Pf4wp\WordpressPlugin
         'delete_cookies'      => 'before_optout',
         'geo_cache_time'      => 1440, // in minutes
         'geo_backup_service'  => true,
+        'dashboard_max_stats' => 5,
     );
 
     /** -------------- HELPERS -------------- */
@@ -84,7 +91,7 @@ class Main extends \Pf4wp\WordpressPlugin
      * @param bool $mark_selected Adds a 'selected' value to the results, based on countries options
      * @return array Array containing contries in key/value pairs, where key is the 2-digit country code and vaue the country name
      */
-    protected function getCountries($mark_selected = false)
+    public function getCountries($mark_selected = false)
     {
         if (!isset($this->np_cache['countries'])) {
             $this->np_cache['countries'] = array(); // Initialize
@@ -154,7 +161,7 @@ class Main extends \Pf4wp\WordpressPlugin
                 break;
 
             default :
-                $country_long = isset($countries[$country_code]) ? $countries[$country_code]['country'] : 'Unknown';
+                $country_long = isset($countries[$country_code]) ? $countries[$country_code]['country'] : static::UNKNOWN;
                 break;
         }
 
@@ -452,6 +459,11 @@ class Main extends \Pf4wp\WordpressPlugin
     /**
      * Determines if the IP is in the user-defined list of countries
      *
+     * Note: In some cases, the geolocation service may return "AP" (Asia/Pacific) or
+     * "EU" (Europe), giving no indication of the actual country. In such cases, we check
+     * if an entry in the user-defined list falls within either AP or EU and return true
+     * as well (to ensure it does not get excluded)
+     *
      * @return bool Returns `true` if the country is in the user-defined list (or unknown and needs to be handled anyway)
      */
     public function isSelectedCountry($ip)
@@ -526,21 +538,26 @@ class Main extends \Pf4wp\WordpressPlugin
                     // It's something else
                     $new_cookies[$cookie_name] = array(
                         'desc'  => '',
-                        'group' => 'Unknown',
+                        'group' => static::UNKNOWN,
                     );
                 }
             }
         }
 
-        // Merge new cookies with existing ones
-        $cookies = array_merge($this->options->known_cookies, $new_cookies);
+        if (!empty($new_cookies)) {
+            // Invalidate 'known_cookies' NP cache
+            $this->np_cache['known_cookies'] = array();
 
-        // Ensure the session cookie has the correct requirement set at all times
-        if ($session_name && isset($cookies[$session_name]))
-            $cookies[$session_name]['required'] = $this->options->php_sessions_required;
+            // Merge new cookies with existing ones
+            $cookies = array_merge($this->options->known_cookies, $new_cookies);
 
-        // Save cookies
-        $this->options->known_cookies = $cookies;
+            // Ensure the session cookie has the correct requirement set at all times
+            if ($session_name && isset($cookies[$session_name]))
+                $cookies[$session_name]['required'] = $this->options->php_sessions_required;
+
+            // Save cookies
+            $this->options->known_cookies = $cookies;
+        }
     }
 
     /**
@@ -554,6 +571,18 @@ class Main extends \Pf4wp\WordpressPlugin
     {
         $required = false;
         $result   = false;
+        $cache_id = md5($cookie_name);
+
+        // Ensure we have base NP for known cookies (easier for invalidating)
+        if (!isset($this->np_cache['known_cookies']))
+            $this->np_cache['known_cookies'] = array();
+
+        // If we have done a lookup already, return those results
+        if (isset($this->np_cache['known_cookies'][$cache_id])) {
+            extract($this->np_cache['known_cookies'][$cache_id], EXTR_OVERWRITE);
+
+            return $result;
+        }
 
         // Peform a simple check on stored known cookies first
         $known_cookies = $this->options->known_cookies;
@@ -577,8 +606,34 @@ class Main extends \Pf4wp\WordpressPlugin
             $result   = true;
         }
 
+        // Save the results into an NP cache before returning
+        $this->np_cache['known_cookies'][$cache_id] = array(
+            'result'    => $result,
+            'required'  => $required,
+        );
+
         return $result;
     }
+
+    /**
+     * Returns if there are any new cookies that need attention
+     *
+     * @since 1.0.30
+     * @return bool
+     */
+    public function hasNewCookies()
+    {
+        if (!isset($this->np_cache['has_new_cookies'])) {
+            $cookies = $this->options->known_cookies;
+            $groups  = array();
+            array_walk_recursive($cookies, function($v, $k) use(&$groups) { if($k == 'group') array_push($groups, $v); });
+
+            $this->np_cache['has_new_cookies'] = in_array(static::UNKNOWN, $groups);
+        }
+
+        return $this->np_cache['has_new_cookies'];
+    }
+
 
     /**
      * Checks if the visitor has seen the alert before, and implied consent
@@ -1016,6 +1071,9 @@ class Main extends \Pf4wp\WordpressPlugin
                     'group' => 'Website',
                 ),
             );
+
+            // Invalidate NP cache, just in case
+            $this->np_cache['known_cookies'] = array();
         }
 
         // And pre-fill the countries
@@ -1109,6 +1167,21 @@ class Main extends \Pf4wp\WordpressPlugin
         // Cookies are once more handled here, to delete any cookies added after we first handled them
         if (!headers_sent())
             $this->handleCookies();
+    }
+
+    /**
+     * Registers the Dashboard widget(s)
+     *
+     * @since 1.0.30
+     */
+    public function onDashboardWidgetRegister()
+    {
+        // Queue the stylesheet too
+        list($css_url, $version, $debug) = $this->getResourceUrl('css');
+        wp_enqueue_style($this->getName() . '-admin', $css_url . 'admin' . $debug . '.css', false, $version);
+
+
+        new Dashboard\Main($this);
     }
 
     /**
@@ -1430,8 +1503,14 @@ class Main extends \Pf4wp\WordpressPlugin
         $cookie_menu->count = count($this->options->known_cookies);
         $cookie_menu->context_help = new ContextHelp($this, 'cookies');
 
+        // Save the slug (used by dashboard)
+        $this->cookie_menu_slug = array(\Pf4wp\Menu\CombinedMenu::SUBMENU_ID => $cookie_menu->getSlug());
+
         // Add statistics menu
         $stats_menu = $mymenu->addSubmenu(__('Statistics', $this->getName()), array($this, 'onStatsMenu'));
+
+        // Save the slug for the statistics menu, too
+        $this->stats_menu_slug = array(\Pf4wp\Menu\CombinedMenu::SUBMENU_ID => $stats_menu->getSlug());
 
         return $mymenu;
     }
@@ -1642,8 +1721,9 @@ class Main extends \Pf4wp\WordpressPlugin
                     $_POST['known_cookies'][$name]['group'] = 'Unspecified';
             }
 
-            // Save
+            // Save and invalidate known_cookies np cache
             $this->options->known_cookies = $_POST['known_cookies'];
+            $this->np_cache['known_cookies'] = array();
 
             AdminNotice::add(__('Cookies have been saved', $this->getName()));
         }

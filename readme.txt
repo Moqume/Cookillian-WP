@@ -43,6 +43,7 @@ With the included statistics, you can see how many visitors have decided to opt 
 * Supports caching plugins, such as WP Super Cache
 * Support for the DNT/Do Not Track browser headers (http://donottrack.us)
 * Support for "Implied Consent"
+* Dashboard widget for quick overview of the statistics, and if new cookies have been detected
 
 Visit the [official website](http://myatus.com/projects/cookillian/) for more details.
 
@@ -69,7 +70,7 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.0.29 =
+= 1.0.30 =
 * __Added:__ Support for "Implied Consent"
 * __Added:__ Support for caching plugins, such as WP Super Cache and W3 Total Cache
 * __Added:__ Option to provide custom styling for the alert from the menu
@@ -77,6 +78,7 @@ with PHP versions older than 5.3.
 * __Added:__ Option to adjust geolocation cache time, as well as clear it
 * __Added:__ Backup geoloaction service, provided by [freegeoip.net](http://www.freegeoip.net), should the default geoloaction service fail.
 * __Added:__ Export option (CSV) for statistics
+* __Added:__ Dashboard widget, giving quick overview of newly added cookies and top statistics
 * Fixed: Fixed a bug that overwrote existing cookies from the __Cookies__ listing
 * Fixed: Empty country name on "Unknown" country in statistics
 * Fixed: If a generic "EU" or "AP" is retured by the geolocation service, determine if selected countries falls within that region
