@@ -60,7 +60,7 @@
             </tbody>
         </table>
 
-        {% if max_stats > 0 %}<p><a href="{{ stats_url }}" title="See more statistics">{{ __('See more') }} &hellip;</a></p>{% endif %}
+        {% if max_stats > 0 and stats_count > max_stats %}<p><a href="{{ stats_url }}" title="See more statistics">{{ __('See more') }} &hellip;</a></p>{% endif %}
     {% else %}
         <p>{{ __('No statistics reported yet. Not to worry, they\'ll come soon.') }}</p>
     {% endif %}

@@ -71,6 +71,7 @@ class Main extends ControlledDashboardWidget
             'year'              => $year,
             'month'             => $month,
             'stats'             => $curr_stats,
+            'stats_count'       => count($curr_stats),
             'countries'         => $this->owner->getCountries(),
             'max_stats'         => ($max_stats > 0) ? $max_stats : '',
             'cookie_url'        => add_query_arg($this->owner->cookie_menu_slug, $this->owner->getParentMenuUrl()),
