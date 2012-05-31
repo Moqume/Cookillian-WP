@@ -3,7 +3,7 @@ Contributors: Myatu
 Donate link: http://pledgie.com/campaigns/16906
 Tags: cookie, ec, europe, uk, law, directive, filter, block, eu cookie directive
 Requires at least: 3.3
-Tested up to: 3.4-beta3
+Tested up to: 3.4-RC1
 Stable tag: 1.0.17.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html

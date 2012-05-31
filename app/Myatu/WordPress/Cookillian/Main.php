@@ -349,10 +349,6 @@ class Main extends \Pf4wp\WordpressPlugin
     /**
      * Cookie handler
      *
-     * This checks if the visitor is from a specified country, adds unknown cookies
-     * to the plugin cookie database and removes all cookies with the exception of
-     * those marked as required.
-     *
      * @param string $referer Referer of the current page (AJAX, @since 1.0.23)
      * @return bool Returns `true` if cookies are blocked
      */
@@ -375,7 +371,8 @@ class Main extends \Pf4wp\WordpressPlugin
             if ($this->isImpliedConsent($referer)) {
                 $this->addStat('optin');
 
-                Cookies::set($this->short_name . static::OPTIN_ID, 2, strtotime(static::COOKIE_LIFE), true, false, '/');
+                $cookie_path = trailingslashit(parse_url(get_home_url(), PHP_URL_PATH));
+                Cookies::set($this->short_name . static::OPTIN_ID, 2, strtotime(static::COOKIE_LIFE), true, false, $cookie_path);
 
                 return false;
             }
@@ -423,6 +420,9 @@ class Main extends \Pf4wp\WordpressPlugin
 
         // Iterate cookies and remove cookies that aren't required
         foreach ($_COOKIE as $cookie_name => $cookie_value) {
+            // Sanitize the cookie name
+            $cookie_name = $this->sanitizeCookieName($cookie_name);
+
             // Skip the opt-out or session cookie
             if ($cookie_name == $this->short_name . static::OPTOUT_ID || $cookie_name == $session_name)
                 continue;
@@ -520,9 +520,13 @@ class Main extends \Pf4wp\WordpressPlugin
         $session_name = (ini_get('session.use_cookies')) ? session_name() : false;
 
         foreach ($_COOKIE as $cookie_name => $cookie_value) {
-            if ($cookie_name == $this->short_name . static::OPTOUT_ID ||
-                $cookie_name == $this->short_name . static::OPTOUT_ID)
-                continue;
+            // Sanitize the cookie name
+            $cookie_name = $this->sanitizeCookieName($cookie_name);
+
+            if (in_array($cookie_name, array(
+                    $this->short_name . static::OPTOUT_ID,  // Opt-out cookie
+                    $this->short_name . static::OPTIN_ID,   // Opt-in cookie
+                ))) continue;
 
             if (!$this->isKnownCookie($cookie_name)) {
                 // We have a new cookie
@@ -558,6 +562,25 @@ class Main extends \Pf4wp\WordpressPlugin
             // Save cookies
             $this->options->known_cookies = $cookies;
         }
+    }
+
+    /**
+     * Sanitizes the cookie name
+     *
+     * @since 1.0.30
+     * @param string $cookie_name The cookie name to be sanitized
+     * @return string the sanitized cookie name
+     */
+    public function sanitizeCookieName($cookie_name)
+    {
+        // Strip HTML tags
+        $cookie_name = strip_tags($cookie_name);
+
+        // Strip invalid characters
+        $cookie_name = preg_replace('@[^\w-\&\$#]@', '', $cookie_name);
+
+        // Return a nicely trimmed cookie name
+        return trim($cookie_name);
     }
 
     /**
@@ -853,12 +876,13 @@ class Main extends \Pf4wp\WordpressPlugin
     {
         $opt_in_or_out = '';
         $redir_url     = (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : add_query_arg(array($this->short_name . static::RESP_ID => false)));
+        $cookie_path   = trailingslashit(parse_url(get_home_url(), PHP_URL_PATH));
 
         switch ($answer) {
             case 2 :
                 // Reset/clear previous opt-in or out
-                setcookie($this->short_name . static::OPTIN_ID, '', time() - 3600, '/');
-                setcookie($this->short_name . static::OPTOUT_ID, '', time() - 3600, '/');
+                setcookie($this->short_name . static::OPTIN_ID, '', time() - 3600, $cookie_path);
+                setcookie($this->short_name . static::OPTOUT_ID, '', time() - 3600, $cookie_path);
                 break;
 
             case 1 :
@@ -882,7 +906,7 @@ class Main extends \Pf4wp\WordpressPlugin
 
         if (!empty($opt_in_or_out)) {
             // Set a cookie with the visitor's response
-            Cookies::set($opt_in_or_out, 1, strtotime(static::COOKIE_LIFE), true, false, '/');
+            Cookies::set($opt_in_or_out, 1, strtotime(static::COOKIE_LIFE), true, false, $cookie_path);
         }
 
         if ($redirect) {
@@ -1240,8 +1264,8 @@ class Main extends \Pf4wp\WordpressPlugin
                     'implied_consent' => $this->hasImpliedConsent(),
                     'opted_out'       => $this->optedOut(),
                     'opted_in'        => $this->optedIn(),
-                    'is_manual'       => ($this->options->alert_show == 'manual'), // Used internally
-                    'has_nst'         => ($this->options->noscript_tag && $cookies_blocked && !$this->optedOut() && !$this->hasActiveCachingPlugin()), // Used internally
+                    'is_manual'       => ($this->options->alert_show == 'manual'), // Used internally, check if alert is inserted manually
+                    'has_nst'         => ($this->options->noscript_tag && $cookies_blocked && !$this->optedOut() && !$this->hasActiveCachingPlugin()), // Used internally, check if "noscript" tag should be present
                 );
 
                 if (!$cookies_blocked) {
@@ -1653,8 +1677,9 @@ class Main extends \Pf4wp\WordpressPlugin
         $ip = $this->getRemoteIP();
 
         $debug_info = array_merge($this->getDebugInfo(), array(
-            'Detected IP'      => $ip,
-            'Detected Country' => $this->getCountryName($this->getCountryCode($ip)),
+            'Detected IP'               => $ip,
+            'Detected Country'          => $this->getCountryName($this->getCountryCode($ip)),
+            'Has active caching plugin' => ($this->hasActiveCachingPlugin()) ? 'Yes' : 'No',
         ));
 
         // Export the options, which will be added to vars
