@@ -1463,45 +1463,45 @@ class Main extends \Pf4wp\WordpressPlugin
      *
      * Shortcodes:
      *  - alert                 Displays the Cookie Alert, if required
-     *  - cookies (group|all)   Displays information about all cookies, or those within a certain group
+     *  - cookies (group[s])    Displays information about all cookies, or those within a certain groups (comma seperated)
+     *  - exclude group[s]      Excludes group[s] (comma seperated, only when no cookie groups specified - since 1.0.31)
      */
     public function onShortCode($atts)
     {
-        // Singular attributes
-        if (count($atts) == 1) {
-            if (isset($atts[0]))
-                $atts = array_flip($atts);
+        $known_cookies      = $this->options->known_cookies;
+        $cookies_to_display = array();
 
-            // 'alert' or 'alert=...'
-            if (isset($atts['alert']))
+        if (count($atts) >= 1) {
+            // Check for singular items:
+            if (in_array('alert', $atts)) {
                 return apply_filters('cookillian_alert', '');
+            }
 
-            // 'cookies' or 'cookies=...'
-            if (isset($atts['cookies'])) {
-                $known_cookies = $this->options->known_cookies;
-                $cookies       = array();
+            if (in_array('cookies', $atts)) {
+                // Display all cookies, except if there's excluded groups
+                if (isset($atts['exclude'])) {
+                    $excluded = explode(',', strtolower(str_replace(' ', '', $atts['exclude'])));
 
-                if (empty($atts['cookies'])) {
-                    // Display all cookies
-                    $cookies = $known_cookies;
+                    array_walk($known_cookies, function($v, $k) use(&$cookies_to_display, $excluded) { if (!in_array(strtolower($v['group']), $excluded)) $cookies_to_display[$k] = $v; });
                 } else {
-                    // Only display cookies in a certain group
-                    $group = strtolower($atts['cookies']);
-
-                    foreach ($known_cookies as $known_cookie_name => $known_cookie_value) {
-                        if (strtolower($known_cookie_value['group']) == $group)
-                            $cookies[$known_cookie_name] = $known_cookie_value;
-                    }
+                    $cookies_to_display = $known_cookies;
                 }
+            } else if (array_key_exists('cookies', $atts)) {
+                // Specific cookie group specified (exclude doesn't apply)
+                $groups = explode(',', strtolower(str_replace(' ', '', $atts['cookies'])));
 
-                // Strip slashes
-                $cookies = $this->deepStripSlashes($cookies);
+                array_walk($known_cookies, function($v, $k) use(&$cookies_to_display, $groups) { if (in_array(strtolower($v['group']), $groups)) $cookies_to_display[$k] = $v; });
+            }
+
+            if ($cookies_to_display) {
+                // We've got cookies to display, deep strip slashes (pf4wp doesn't do that)
+                $cookies_to_display = $this->deepStripSlashes($cookies_to_display);
 
                 // Sort by group
-                uasort($cookies, function($a,$b) { return strcasecmp($a['group'], $b['group']); });
+                uasort($cookies_to_display, function($a,$b) { return strcasecmp($a['group'], $b['group']); });
 
                 return $this->template->render('cookie_table.html.twig', array(
-                    'cookies'       => $cookies,
+                    'cookies'       => $cookies_to_display,
                     'required_text' => $this->options->required_text,
                 ));
             }

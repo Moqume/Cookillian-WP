@@ -3,7 +3,7 @@ Contributors: Myatu
 Donate link: http://pledgie.com/campaigns/16906
 Tags: cookie, ec, europe, uk, law, directive, filter, block, eu cookie directive
 Requires at least: 3.3
-Tested up to: 3.4-RC1
+Tested up to: 3.4
 Stable tag: 1.0.17.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -21,7 +21,6 @@ It will also collect basic information about any cookies set from within WordPre
 If the visitor allows for cookies (either through opt in or a visitor outside the countries specified), then additional Javascript can be included at the website's header and/or footer, allowing the inclusion of, for example, Google Analytics. This allows for better control over 3rd party cookies.
 
 With the included statistics, you can see how many visitors have decided to opt in, out or ignore the cookie alert per country, for each month of the year.
-
 
 = Features =
 
@@ -70,7 +69,7 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.0.30 =
+= 1.0.31 =
 * __Added:__ Support for "Implied Consent"
 * __Added:__ Support for caching plugins, such as WP Super Cache and W3 Total Cache
 * __Added:__ Option to provide custom styling for the alert from the menu
@@ -84,6 +83,7 @@ with PHP versions older than 5.3.
 * Fixed: If a generic "EU" or "AP" is retured by the geolocation service, determine if selected countries falls within that region
 * Changed: On JavaScript-enabled browsers, the _Delete_ box has been replaced by a _Remove_ button in the __Cookies__ listing
 * Changed: Made the _noscript_ tag optional, to accomodate caching plugins
+* Changed: Shortcode for listing cookies now accepts multiple groups, as well as exclusion
 
 = 1.0.17.1 (22 May 2012) =
 * Fixed: Fixed bug that caused the plugin from operating on certain systems (apache_note())
