@@ -1389,7 +1389,10 @@ class Main extends \Pf4wp\WordpressPlugin
         // Provide a "noscript" tag for browsers that do not have JS enabled (not compatible with caching plugins)
         if ($this->options->noscript_tag && $this->cookies_blocked && !$this->optedOut() && !$this->hasActiveCachingPlugin()) {
             $this->addStat('displayed');
-            echo '<noscript><style type="text/css" media="screen">.cookillian-alert{ position: absolute; left: 0; top: 0; display: block !important; } .cookillian-alert .close { display: none; }</style></noscript>';
+
+            $extra_styling = ($this->options->alert_show == 'manual') ? '' : 'position:absolute;left:0;top:0;';
+
+            printf("<noscript><style type=\"text/css\" media=\"screen\">.cookillian-alert{%s display:block !important;} .cookillian-alert .close{display: none;}</style></noscript>", $extra_styling);
         }
     }
 
@@ -1677,9 +1680,9 @@ class Main extends \Pf4wp\WordpressPlugin
         $ip = $this->getRemoteIP();
 
         $debug_info = array_merge($this->getDebugInfo(), array(
-            'Detected IP'               => $ip,
-            'Detected Country'          => $this->getCountryName($this->getCountryCode($ip)),
-            'Has active caching plugin' => ($this->hasActiveCachingPlugin()) ? 'Yes' : 'No',
+            'Detected IP'           => $ip,
+            'Detected Country'      => $this->getCountryName($this->getCountryCode($ip)),
+            'Active caching plugin' => ($this->hasActiveCachingPlugin()) ? 'Yes' : 'No',
         ));
 
         // Export the options, which will be added to vars

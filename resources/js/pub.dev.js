@@ -73,11 +73,11 @@ if (typeof cookillian === "undefined") {
             } else {
                 // Something went wrong, provide some defaults
                 $.extend(this, {
-                    "blocked_cookes" : true,
-                    "opted_out"      : false,
-                    "opted_in"       : false,
-                    "is_manual"      : true,
-                    "has_nst"        : false,
+                    "blocked_cookies" : true,
+                    "opted_out"       : false,
+                    "opted_in"        : false,
+                    "is_manual"       : false,
+                    "has_nst"         : false,
                 });
             }
         },
@@ -87,7 +87,7 @@ if (typeof cookillian === "undefined") {
          */
         displayAlert : function() {
             var cookillian_alert = $(".cookillian-alert")
-                , show = (cookillian.blocked_cookies && !cookillian.opted_out);
+                , do_show = (cookillian.blocked_cookies && !cookillian.opted_out);
 
             if (!cookillian_alert.length) {
                 return; // Nothing to do!
@@ -100,7 +100,7 @@ if (typeof cookillian === "undefined") {
             });
 
             // Show the alert if needed
-            if (show) {
+            if (do_show) {
                 if (!cookillian.is_manual) {
                     // We have added the alert automatically, so move it from where it was inserted
                     // to the top of the content
