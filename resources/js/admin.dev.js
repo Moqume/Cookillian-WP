@@ -254,7 +254,7 @@ if (typeof cookillian === "undefined") {
             });
 
             $(".month-row").click(function() {
-                details = $("#" + $(this).attr('id') + "_details");
+                details = $("." + $(this).attr('id') + "_details");
 
                 if ($(this).hasClass("expanded")) {
                     $(this).removeClass("expanded");
