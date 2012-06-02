@@ -45,8 +45,19 @@
                 {% for month_name, month_stat in stats %}
                     {% if thr != month_name %}
                         {% set thr = month_name %}
+                        {% if stats|length == loop.index %}
+                            {% set is_last = true %}
+                        {% else %}
+                            {% set is_last = false %}
+                        {% endif %}
+
                         <tr>
-                            <th scope="row" colspan="5"><strong>{{ month_name }}</strong></th>
+                            <th scope="row" colspan="5" class="month-row {% if is_last %}expanded{% endif %}" id="row_{{ month_name }}" title="{{ __('Click to expand') }}">
+                                <strong>{{ month_name }}</strong>
+                                <span class="hide-if-no-js collapse-btn">
+                                    {% if not is_last %}&#9660;{% else %}&#9650;{% endif %}
+                                </span>
+                            </th>
                         </tr>
                     {% endif %}
 
@@ -65,7 +76,7 @@
                             {% set country_name  = countries[country_abbr].country %}
                         {% endif %}
 
-                        <tr>
+                        <tr {% if not is_last %}class="hide-if-js"{% endif %} id="row_{{ month_name }}_details">
                             <td>{{ country_name }}</td>
                             <td>{{ country_stat.0 }}</td>
                             <td>{{ country_stat.1 }}</td>

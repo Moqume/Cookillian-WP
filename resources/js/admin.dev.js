@@ -25,7 +25,7 @@ if (typeof cookillian === "undefined") {
         };
     }
 
-    cookillian = {
+    $.extend(cookillian, {
         /**
          * This is a simple wrapper for calling an Ajax function and obtaining its response
          *
@@ -67,10 +67,11 @@ if (typeof cookillian === "undefined") {
                 , alert_custom     = $(".alert_custom")
                 , is_custom;
 
-            if (!alert_content_type.length)
+            if (!alert_content_type.length) {
                 return;
+            }
 
-            is_custom = (alert_content_type.val() == "custom");
+            is_custom = (alert_content_type.val() === "custom");
 
             alert_custom.showHide(is_custom);
             alert_normal.showHide(!is_custom);
@@ -83,10 +84,11 @@ if (typeof cookillian === "undefined") {
             var alert_style                = $('input[name="alert_style"]:checked')
                 , alert_custom_style_extra = $(".alert_custom_style_extra");
 
-            if (!alert_style.length)
+            if (!alert_style.length) {
                 return;
+            }
 
-            alert_custom_style_extra.showHide(alert_style.val() == "custom");
+            alert_custom_style_extra.showHide(alert_style.val() === "custom");
         },
 
         /**
@@ -96,10 +98,11 @@ if (typeof cookillian === "undefined") {
             var maxmind_settings    = $(".maxmind_settings")
                 , geo_checked       = $('input[name="geo_service"]:checked');
 
-            if (!geo_checked.length)
+            if (!geo_checked.length) {
                 return;
+            }
 
-            maxmind_settings.showHide(geo_checked.val() == 'maxmind');
+            maxmind_settings.showHide(geo_checked.val() === 'maxmind');
         },
 
         /**
@@ -237,17 +240,38 @@ if (typeof cookillian === "undefined") {
          * Initializes the JS functionality on the Statistics page
          */
         initStatsPage : function() {
+            var stats_form = $("#stats_form")
+                , details;
+
+            if (!stats_form.length) {
+                return;
+            }
+
             $("#clear-stats").click(function(e) {
                 if (!confirm(cookillian_translate.are_you_sure)) {
                     e.preventDefault();
                 }
             });
+
+            $(".month-row").click(function() {
+                details = $("#" + $(this).attr('id') + "_details");
+
+                if ($(this).hasClass("expanded")) {
+                    $(this).removeClass("expanded");
+                    $(".collapse-btn", this).html("&#9660;");
+                    details.fadeOut();
+                } else {
+                    $(this).addClass("expanded");
+                    $(".collapse-btn", this).html("&#9650;");
+                    details.fadeIn();
+                }
+            });
         }
-    }
+    });
 
     $(document).ready(function($){
         cookillian.initSettingsPage();
         cookillian.initCookiePage();
         cookillian.initStatsPage();
     });
-})(jQuery);
+}(jQuery));

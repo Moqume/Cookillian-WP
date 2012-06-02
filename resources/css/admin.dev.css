@@ -167,3 +167,15 @@
     -webkit-box-shadow: rgba(255, 255, 255, 0.5) 0 1px 0;
     box-shadow: rgba(255, 255, 255, 0.5) 0 1px 0;
 }
+
+/** Stats **/
+.month-row {
+    cursor: pointer;
+}
+
+.collapse-btn {
+    position: relative;
+    top: -1px;
+    font-size: 8px;
+    line-height: 8px;
+}
