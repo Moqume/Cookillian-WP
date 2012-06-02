@@ -76,7 +76,7 @@
                             {% set country_name  = countries[country_abbr].country %}
                         {% endif %}
 
-                        <tr {% if not is_last %}class="hide-if-js {% endif %}row_{{ month_name }}_details">
+                        <tr class="{% if not is_last %}hide-if-js {% endif %}row_{{ month_name }}_details">
                             <td>{{ country_name }}</td>
                             <td>{{ country_stat.0 }}</td>
                             <td>{{ country_stat.1 }}</td>
