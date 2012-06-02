@@ -4,7 +4,7 @@ Donate link: http://pledgie.com/campaigns/16906
 Tags: cookie, ec, europe, uk, cookie law, directive, eu cookie directive, filter, block,
 Requires at least: 3.3
 Tested up to: 3.4
-Stable tag: 1.1.6
+Stable tag: 1.1.7
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -69,7 +69,7 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.1.6 (June 2 2012) =
+= 1.1.7 (June 2 2012) =
 * __Added:__ The option for asynchronous AJAX initialization
 * __Added:__ Two new JS API events (_cookillian_load_ and _cookillian_ready_) and JS API function (_insertString()_)
 * __Added:__ Collapsible months on the __Statistics__ page
