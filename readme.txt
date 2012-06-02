@@ -69,10 +69,13 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.1.3 =
+= 1.1.6 =
+* __Added:__ The option for asynchronous AJAX initialization
+* __Added:__ Two new JS API events (_cookillian_load_ and _cookillian_ready_) and JS API function (_insertString()_)
 * __Added:__ Collapsible months on the __Statistics__ page
 * Fixed: No longer permit statistics to be added beyond the count of shown alerts
 * Fixed: Regression bug that prevented the "More..." from displaying on Dashboard widget
+* Fixed: Implied consent not always honored due to incorrect "true_referrer" variable sent back
 
 = 1.1 (May 31 2012) =
 * __Added:__ Support for "Implied Consent"

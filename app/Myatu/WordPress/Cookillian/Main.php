@@ -1256,11 +1256,11 @@ class Main extends \Pf4wp\WordpressPlugin
     {
         switch ($action) {
             case 'init' :
-                if (!isset($data['true_referer']))
+                if (!isset($data['true_referrer']))
                     return; // Malformed request
 
                 // Performs handleCookies(), and returns JS data based on the result
-                $cookies_blocked = $this->handleCookies($data['true_referer']);
+                $cookies_blocked = $this->handleCookies($data['true_referrer']);
 
                 $vars = array(
                     'blocked_cookies' => $cookies_blocked,
@@ -1366,6 +1366,10 @@ class Main extends \Pf4wp\WordpressPlugin
         list($js_url, $version, $debug) = $this->getResourceUrl();
 
         wp_enqueue_script($this->getName() . '-pub', $js_url . 'pub' . $debug . '.js', array('jquery'), $version);
+
+        // Output JS variables that can remain static with caching
+        $extra_js_vars = sprintf('var cookillian = {"use_async_ajax":%s};', ($this->options->async_ajax) ? 'true' : 'false');
+        echo $this->jsBlock($extra_js_vars);
     }
 
     /**
@@ -1590,6 +1594,7 @@ class Main extends \Pf4wp\WordpressPlugin
                 'delete_cookies'        => array('in_array', array('before_optout', 'after_optout')),
                 'geo_cache_time'        => 'int',
                 'geo_backup_service'    => 'bool',
+                'async_ajax'            => 'bool',
             ));
 
             // Extra sanity check for geo_cache_time, one minute is absolute minimum
@@ -1696,7 +1701,7 @@ class Main extends \Pf4wp\WordpressPlugin
             'alert_custom_content', 'required_text', 'script_header', 'script_footer', 'debug_mode',
             'js_wrap', 'show_on_unknown_location', 'maxmind_db', 'maxmind_db_v6', 'implied_consent',
             'noscript_tag', 'alert_style', 'alert_custom_style', 'delete_cookies', 'geo_cache_time',
-            'geo_backup_service',
+            'geo_backup_service', 'async_ajax',
         ));
 
         $vars = array_merge(array(

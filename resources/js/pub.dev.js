@@ -46,40 +46,79 @@ if (typeof cookillian === "undefined") {
 
         /**
          * Initializes Cookillian
-         *
-         * Note: the AJAX call is NOT asynchronous because we need to keep the execution order
          */
         init : function() {
-            var true_referer = (document.referer) ? document.referer : false
-                , resp = cookillian.getAjaxData('init', {"true_referer" : true_referer});
+            var true_referrer = document.referrer || false
+                , resp, default_handler;
 
-            if (resp) {
-                // We have a response
-                if (typeof resp.debug !== "undefined" && typeof console === "object") {
+            // Default handler for a valid response
+            default_handler = function(r) {
+                if (typeof r.debug !== "undefined" && typeof console === "object") {
                     // We have debug details, show it in the console if it's available
-                    console.log(resp);
+                    console.log(r);
                 }
 
-                if (typeof resp.header_script !== "undefined") {
+                if (typeof r.header_script !== "undefined") {
                     // "head" exists at this point (it's where we're called from), so add
                     // any extra header scripts now. Footer scripts will need to wait.
-                    $("head").append(resp.header_script);
+                    $("head").append(r.header_script);
 
-                    delete resp.header_script;
+                    delete r.header_script;
                 }
 
-                // And extend ourselves with the response
-                $.extend(this, resp);
+                // Extend ourselves with the response
+                $.extend(cookillian, r);
+            };
+
+            // Provide some defaults
+            $.extend(this, {
+                "blocked_cookies" : true,
+                "implied_consent" : false,
+                "opted_out"       : false,
+                "opted_in"        : false,
+                "is_manual"       : false,
+                "has_nst"         : false
+            });
+
+            if (!cookillian.use_async_ajax) {
+                // Synchronous AJAX call
+                resp = cookillian.getAjaxData('init', {"true_referrer" : true_referrer});
+
+                if (resp) {
+                    default_handler(resp);
+                }
             } else {
-                // Something went wrong, provide some defaults
-                $.extend(this, {
-                    "blocked_cookies" : true,
-                    "opted_out"       : false,
-                    "opted_in"        : false,
-                    "is_manual"       : false,
-                    "has_nst"         : false,
+                // Asynchronous AJAX call
+                cookillian.getAjaxData('init', {"true_referrer" : true_referrer}, function(r) {
+                    default_handler(r);
+
+                    // Perform post intialization now
+                    cookillian.postInit();
                 });
             }
+        },
+
+        /**
+         * Performs post-Initialization
+         */
+        postInit : function() {
+            // Perform when document is ready:
+            $(document).ready(function($) {
+                // Inject footer script, if we have any
+                if (typeof cookillian.footer_script !== "undefined") {
+                    $("body").append(cookillian.footer_script);
+
+                    delete cookillian.footer_script;
+                }
+
+                // Display the alert (if needed)
+                cookillian.displayAlert();
+
+                $(document).trigger('cookillian_ready', cookillian);
+            });
+
+            // Perform now:
+            $(document).trigger('cookillian_load', cookillian); // Event triggered immediately
         },
 
         /**
@@ -117,8 +156,12 @@ if (typeof cookillian === "undefined") {
             }
         },
 
+        // ----------- API ----------- //
+
         /**
          * Deletes the cookies (user func)
+         *
+         * @api
          */
         deleteCookies : function() {
             return cookillian.getAjaxData('delete_cookies', true);
@@ -126,6 +169,8 @@ if (typeof cookillian === "undefined") {
 
         /**
          * Opts a visitor in
+         *
+         * @api
          */
         optIn : function() {
             return cookillian.getAjaxData('opt_in', true);
@@ -133,6 +178,8 @@ if (typeof cookillian === "undefined") {
 
         /**
          * Opts a visitor out
+         *
+         * @api
          */
         optOut : function() {
             return cookillian.getAjaxData('opt_out', true);
@@ -140,24 +187,58 @@ if (typeof cookillian === "undefined") {
 
         /**
          * Resets the user's choice of opt in or out
+         *
+         * @api
          */
         resetOptinout : function() {
             return cookillian.getAjaxData('reset_optinout', true);
+        },
+
+        /**
+         * Inserts an arbitrary string, depending on the value
+         *
+         * @api
+         * @param string where Selector where to insert the string
+         * @param string true_string String to write when tf_value is true
+         * @param string false_string String to write when tf_value is false (optional)
+         * @param string|bool tf_value If a string, compares against Cookillian variables ("blocked_cookes" by default), otherwise a simple true/false trigger
+         */
+        insertString : function(where, true_string, false_string, tf_value) {
+            var selector = $(where);
+
+            // Return if there's no valid selector
+            if (!selector.length) {
+                return;
+            }
+
+            // Set a default value to check against
+            if (typeof tf_value === "undefined") {
+                tf_value = "blocked_cookies";
+            }
+
+            $(document).on("cookillian_ready", function() {
+                if (typeof tf_value === "string") {
+                    tf_value = Boolean(cookillian[tf_value]);
+                }
+
+                if (tf_value) {
+                    // True. Append true_string, if there's one
+                    if (true_string) {
+                        $(selector).append(true_string);
+                    }
+                } else if (false_string) {
+                    // False and there's a false_string to append
+                    $(selector).append(false_string);
+                }
+            });
         }
     });
 
-    // ! Initialize Cookillian *before* the document is ready !
+    // ! Initialize Cookillian ASAP !
     cookillian.init();
 
-    $(document).ready(function($){
-        // Inject footer script, if we have any
-        if (typeof cookillian.footer_script !== "undefined") {
-            $("body").append(cookillian.footer_script);
-
-            delete cookillian.footer_script;
-        }
-
-        // Display the alert (if needed)
-        cookillian.displayAlert();
-    });
+    if (!cookillian.use_async_ajax) {
+        // Perform post initialization if we're not using asynchronous AJAX
+        cookillian.postInit();
+    }
 }(jQuery));

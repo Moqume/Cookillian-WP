@@ -420,6 +420,19 @@
 
                 <tr>
                     <th scope="row">
+                        {{ __('Asynchronous AJAX') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="async_ajax" {% if async_ajax %}checked="checked"{% endif %} />
+                            {{ __('Initialize using asynchronous AJAX') }}
+                        </label>
+                        <span class="description">({{ __('Increases speed, but requires JavaScript variables to be accessed via events') }})</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
                         {{ __('Debug Mode') }}
                     </th>
                     <td>
