@@ -69,13 +69,17 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
+= 1.1.2 =
+* Fixed: No longer permit statistics to be added beyond the count of shown alerts
+* Fixed: Regression bug that prevented the "More..." from displaying on Dashboard widget
+
 = 1.1 (May 31 2012) =
 * __Added:__ Support for "Implied Consent"
 * __Added:__ Support for caching plugins, such as WP Super Cache and W3 Total Cache
 * __Added:__ Option to provide custom styling for the alert from the menu
 * __Added:__ Option to delete cookies before or after the visitor has opted out
 * __Added:__ Option to adjust geolocation cache time, as well as clear it
-* __Added:__ Backup geoloaction service, provided by [freegeoip.net](http://www.freegeoip.net), should the default geoloaction service fail.
+* __Added:__ Backup geolocation service, provided by [freegeoip.net](http://www.freegeoip.net), should the default geoloaction service fail.
 * __Added:__ Export option (CSV) for statistics
 * __Added:__ Dashboard widget, giving quick overview of newly added cookies and top statistics
 * Fixed: Fixed a bug that overwrote existing cookies from the __Cookies__ listing

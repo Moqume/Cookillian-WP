@@ -46,16 +46,20 @@ class Main extends ControlledDashboardWidget
     public function onCallback()
     {
         // Fetch some statistics
-        $curr_stats = array();
-        $stats      = $this->owner->options->stats;
-        $max_stats  = $this->owner->options->dashboard_max_stats;
-        $date       = getdate();
-        $year       = $date['year'];
-        $month      = $date['month'];
+        $curr_stats  = array();
+        $stats       = $this->owner->options->stats;
+        $max_stats   = $this->owner->options->dashboard_max_stats;
+        $date        = getdate();
+        $year        = $date['year'];
+        $month       = $date['month'];
+        $stats_count = 0;
 
         if (isset($stats[$year][$month])) {
             // Grab the stats for the current month
-            $curr_stats = $stats[$year][$month];
+            $curr_stats  = $stats[$year][$month];
+
+            // Grab the count of all stats in this month (for "More" link)
+            $stats_count = count($curr_stats);
 
             // Sort them by amount displayed $x[0]
             uasort($curr_stats, function($a, $b) { return ($a[0] == $b[0]) ? 0 : (($a[0] > $b[0]) ? -1 : 1); } );
@@ -71,7 +75,7 @@ class Main extends ControlledDashboardWidget
             'year'              => $year,
             'month'             => $month,
             'stats'             => $curr_stats,
-            'stats_count'       => count($curr_stats),
+            'stats_count'       => $stats_count,
             'countries'         => $this->owner->getCountries(),
             'max_stats'         => ($max_stats > 0) ? $max_stats : '',
             'cookie_url'        => add_query_arg($this->owner->cookie_menu_slug, $this->owner->getParentMenuUrl()),

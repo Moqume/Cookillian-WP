@@ -796,19 +796,23 @@ class Main extends \Pf4wp\WordpressPlugin
                 break;
 
             case 'optin' :
-                $country_stats[1]++;
+                if ($country_stats[0] > ($country_stats[1] + $country_stats[2]))
+                    $country_stats[1]++;
                 break;
 
             case 'optout' :
-                $country_stats[2]++;
+                if ($country_stats[0] > ($country_stats[1] + $country_stats[2]))
+                    $country_stats[2]++;
                 break;
         }
 
-        // Return thde updated stats back to where they belong
-        $stats[$year][$month][$remote_country] = $country_stats;
+        if ($country_stats != array(0, 0, 0)) {
+            // Return thde updated stats back to where they belong
+            $stats[$year][$month][$remote_country] = $country_stats;
 
-        // And save
-        $this->options->stats = $stats;
+            // And save
+            $this->options->stats = $stats;
+        }
     }
 
     /**
