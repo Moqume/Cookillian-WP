@@ -69,7 +69,8 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.1.2 =
+= 1.1.3 =
+* __Added:__ Collapsible months on the __Statistics__ page
 * Fixed: No longer permit statistics to be added beyond the count of shown alerts
 * Fixed: Regression bug that prevented the "More..." from displaying on Dashboard widget
 
