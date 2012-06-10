@@ -4,7 +4,7 @@ Donate link: http://pledgie.com/campaigns/16906
 Tags: cookie, ec, europe, uk, cookie law, directive, eu cookie directive, filter, block,
 Requires at least: 3.3
 Tested up to: 3.4
-Stable tag: 1.1.7-dev9
+Stable tag: 1.1.7-dev12
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -69,9 +69,12 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.1.9 =
+= 1.1.12 =
+* __Added:__ Option to limit the amount of new cookies Cookillian will detect (30 by default)
 * Fixed: Issue where wp_print_script action was called more than once, causing Ajax code to override objects (Pf4wp)
 * Fixed: Minor bug in statistics, where the most recent entry could not be collapsed
+* Fixed: Issue where Firefox/Mozilla prefetch "feature" interfered with implied consent detection
+* Changed: Detected cookies now include the User Agent details, which is displayed on the __Cookies__ page when _Debug Mode_ is enabled
 
 = 1.1.7 (June 2 2012) =
 * __Added:__ The option for asynchronous AJAX initialization
@@ -198,9 +201,13 @@ For slightly more complex use, you insert `<?php cookillian_insert_alert_block()
 
 You can use your own CSS styling through by choosing _Custom_ for the _Alert Styling_ on the __Settings__ page. The alert is wrapped in a `.cookillian-alert` class (also when added manually), providing the background and border colors. The alert heading is in an `.alert-heading` class and the Yes and No buttons in `.btn-ok` and `.btn-no` respectively. If your CSS styling does not appear, you may need to add `!important` to your styling.
 
-= When I click on "Privacy Policy", nothing happened =
+= When I click on "Privacy Policy", nothing happens =
 
 On the __Settings__ page, you will need to modify the __Alert Text__ by replacing the hash sign (#) within the `<a href="#">` HTML tags to the actual URL of your Privacy Policy (and the "More Information" link).
 
+= I'm using a caching plugin and after a while the alert stops showing. Why? =
 
+Cookillian uses a security token for its AJAX requests, which are valid for up to 24 hours. If a page is cached beyond this time, the security token (stored on the cached page) will be invalid and Cookillian can no longer perform AJAX requests. For this reason, it is recommended to cache pages for less than 24 hours.
+
+WP Super Cache includes a _Garbage Collector_, checking cached pages at set intervals for cached pages that have expired. It has a minor issue, where the Garbage Collector will be reset when saving other settings, so you may have to double-check the Garbage Collector is still called at the correct intervals.
 

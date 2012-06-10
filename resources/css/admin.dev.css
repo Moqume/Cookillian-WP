@@ -96,6 +96,10 @@
     -webkit-border-radius: 3px;
 }
 
+#max_new_cookies {
+    width: 40px;
+}
+
 #maxmind_db,
 #maxmind_db_v6 {
     width: 350px;

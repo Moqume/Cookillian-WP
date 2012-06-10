@@ -81,6 +81,7 @@ class Main extends \Pf4wp\WordpressPlugin
         'geo_cache_time'      => 1440, // in minutes
         'geo_backup_service'  => true,
         'dashboard_max_stats' => 5,
+        'max_new_cookies'     => 30,
     );
 
     /** -------------- HELPERS -------------- */
@@ -516,17 +517,21 @@ class Main extends \Pf4wp\WordpressPlugin
         if (!$this->options->auto_add_cookies)
             return;
 
-        $new_cookies  = array();
-        $session_name = (ini_get('session.use_cookies')) ? session_name() : false;
+        $new_cookies_count = $this->countNewCookies();
+        $new_cookies       = array();
+        $session_name      = (ini_get('session.use_cookies')) ? session_name() : false;
 
         foreach ($_COOKIE as $cookie_name => $cookie_value) {
+            if ($this->options->max_new_cookies > 0 && $new_cookies_count > $this->options->max_new_cookies)
+                break; // Stop adding more new cookies
+
             // Sanitize the cookie name
             $cookie_name = $this->sanitizeCookieName($cookie_name);
 
             if (in_array($cookie_name, array(
                     $this->short_name . static::OPTOUT_ID,  // Opt-out cookie
                     $this->short_name . static::OPTIN_ID,   // Opt-in cookie
-                ))) continue;
+                ))) continue; // Skip
 
             if (!$this->isKnownCookie($cookie_name)) {
                 // We have a new cookie
@@ -547,6 +552,8 @@ class Main extends \Pf4wp\WordpressPlugin
                         'ua'    => $_SERVER['HTTP_USER_AGENT'],
                     );
                 }
+
+                $new_cookies_count++;
             }
         }
 
@@ -659,6 +666,24 @@ class Main extends \Pf4wp\WordpressPlugin
         return $this->np_cache['has_new_cookies'];
     }
 
+    /**
+     * Returns if the number of new cookies
+     *
+     * @since 1.1.11
+     * @return int
+     */
+    public function countNewCookies()
+    {
+        if (!$this->hasNewCookies())
+            return 0;
+
+        $new_cookies = array();
+        $cookies     = $this->options->known_cookies;
+
+        array_walk($cookies, function($v, $k) use (&$new_cookies) { if (isset($v['group']) && $v['group'] == \Myatu\WordPress\Cookillian\Main::UNKNOWN) $new_cookies[] = $k; });
+
+        return count($new_cookies);
+    }
 
     /**
      * Checks if the visitor has seen the alert before, and implied consent
@@ -667,28 +692,37 @@ class Main extends \Pf4wp\WordpressPlugin
      * @param string $referer Optional referer (AJAX)
      * @return bool Returns true if the visitor implied consent
      */
-    protected function isImpliedConsent($referer = null)
+    protected function isImpliedConsent($referrer = null)
     {
+        $parse = function($url){ return rtrim(parse_url($url,PHP_URL_HOST) . parse_url($url, PHP_URL_PATH), '/'); };
+
         // Check if we're allowing implied consent
         if (!$this->options->implied_consent)
             return false;
 
+        // Check if it's a Firefox "Pre-fetch" request (Why-oh-why does this not show up in Firebug! Grr...)
+        if (isset($_SERVER['HTTP_X_MOZ']) && $_SERVER['HTTP_X_MOZ'] == 'prefetch')
+            return false;
+
         // No referer provided, grab it
-        if (is_null($referer)) {
+        if (is_null($referrer)) {
             if (isset($_SERVER['HTTP_REFERER']))
-                $referer = $_SERVER['HTTP_REFERER'];
+                $referrer = $_SERVER['HTTP_REFERER'];
         }
 
         // If there's no referer, then the visitor must not have seen the alert before
-        if (!$referer)
+        if (!$referrer)
             return false;
 
-        // Figure out if the referer was within the home url (regardless of scheme, query args, anchors, etc)
-        $home_url        = get_home_url();
-        $parsed_home_url = rtrim(parse_url($home_url, PHP_URL_HOST) . parse_url($home_url, PHP_URL_PATH), '/');
-        $parsed_referer  = rtrim(parse_url($referer,  PHP_URL_HOST) . parse_url($referer,  PHP_URL_PATH), '/');
+        // Figure out if the referer was within the home url, and not the same page (regardless of scheme, query args, anchors, etc)
+        $parsed_home_url  = $parse(get_home_url());
+        $parsed_referrer  = $parse($referrer);
+        $guessed_url      = $parse(Helpers::doingAjax() ? $_SERVER['HTTP_REFERER'] : wp_guess_url());
 
-        return (strpos($parsed_referer, $parsed_home_url) === 0);
+        if ($guessed_url == $parsed_referrer)
+            return false; // Same as calling page
+
+        return (strpos($parsed_referrer, $parsed_home_url) === 0);
     }
 
     /**
@@ -1597,11 +1631,16 @@ class Main extends \Pf4wp\WordpressPlugin
                 'geo_cache_time'        => 'int',
                 'geo_backup_service'    => 'bool',
                 'async_ajax'            => 'bool',
+                'max_new_cookies'       => 'int',
             ));
 
             // Extra sanity check for geo_cache_time, one minute is absolute minimum
             if ($this->options->geo_cache_time < 1)
                 $this->options->geo_cache_time = 1;
+
+            // Reset max_new_cookies to to zero if below
+            if ($this->options->max_new_cookies < 0)
+                $this->options->max_new_cookies = 0;
 
             // Save country selections
             $this->options->countries = (isset($_POST['countries'])) ? $_POST['countries'] : array();
@@ -1662,6 +1701,9 @@ class Main extends \Pf4wp\WordpressPlugin
             if ($warning)
                 AdminNotice::add($warning, true);
         }
+
+        if ($this->options->max_new_cookies > 0 && $this->countNewCookies() >= $this->options->max_new_cookies)
+            AdminNotice::add(sprintf("Cookillian has reached the maximum new cookies it may detect. Please refer to the <a href=\"%s\">Cookies</a> page and edit or delete any new cookies as neccesary.", add_query_arg($this->cookie_menu_slug, $this->getParentMenuUrl())));
     }
 
     /**
@@ -1703,7 +1745,7 @@ class Main extends \Pf4wp\WordpressPlugin
             'alert_custom_content', 'required_text', 'script_header', 'script_footer', 'debug_mode',
             'js_wrap', 'show_on_unknown_location', 'maxmind_db', 'maxmind_db_v6', 'implied_consent',
             'noscript_tag', 'alert_style', 'alert_custom_style', 'delete_cookies', 'geo_cache_time',
-            'geo_backup_service', 'async_ajax',
+            'geo_backup_service', 'async_ajax', 'max_new_cookies',
         ));
 
         $vars = array_merge(array(

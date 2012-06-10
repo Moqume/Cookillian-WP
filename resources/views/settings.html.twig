@@ -330,7 +330,13 @@
                     <td>
                         <label>
                             <input type="checkbox" name="auto_add_cookies" {% if auto_add_cookies %}checked="checked"{% endif %} />
-                            {{ __('Automatically add new/unknown cookies to the <em>Cookies</em> list') | raw }}
+                            {{ __('Automatically add new/unknown cookies to the <em>Cookies</em> list.') | raw }}
+                        </label>
+
+                        <label>
+                            ({{ __('Detect at most') }}
+                            <input type="number" min="0" id="max_new_cookies" name="max_new_cookies" value="{{ max_new_cookies }}">
+                            {{ __('new cookies') }})
                         </label>
                     </td>
                 </tr>
