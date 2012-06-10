@@ -31,7 +31,8 @@
 
 .multi_checkbox .highlighted,
 .multi_checkbox li:hover {
-    background-color: highlight;
+    background-color: Highlight;
+    color: HighlightText;
 }
 
 

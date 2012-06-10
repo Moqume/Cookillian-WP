@@ -4,7 +4,7 @@ Donate link: http://pledgie.com/campaigns/16906
 Tags: cookie, ec, europe, uk, cookie law, directive, eu cookie directive, filter, block,
 Requires at least: 3.3
 Tested up to: 3.4
-Stable tag: 1.1.7-dev12
+Stable tag: 1.1.12
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -12,7 +12,7 @@ Provides extensible support for EU/UK compliance of the EC Cookie Directive (200
 
 == Description ==
 
-_Cookillian_ makes it easier to comply with the EC Cookie Directive, which affects the United Kingdom on May 25th 2012 and other European countries.
+_Cookillian_ makes it easier to comply with the EC Cookie Directive (EU Cookie Law), which affects the United Kingdom on May 25th 2012 and other European countries.
 
 Cookillian will automatically detect if a visitor is located in one of the countries defined by you - likely the countries affected by the EC Cookie Direcitve - and will automatically disable any cookies that are set from within WordPress or a 3rd party plugin. The user will then be presented with an fully customizable alert about cookies, and given the option to opt in or out of using cookies.
 
@@ -69,7 +69,7 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.1.12 =
+= 1.1.12 (June 10 2012) =
 * __Added:__ Option to limit the amount of new cookies Cookillian will detect (30 by default)
 * Fixed: Issue where wp_print_script action was called more than once, causing Ajax code to override objects (Pf4wp)
 * Fixed: Minor bug in statistics, where the most recent entry could not be collapsed
@@ -211,3 +211,8 @@ Cookillian uses a security token for its AJAX requests, which are valid for up t
 
 WP Super Cache includes a _Garbage Collector_, checking cached pages at set intervals for cached pages that have expired. It has a minor issue, where the Garbage Collector will be reset when saving other settings, so you may have to double-check the Garbage Collector is still called at the correct intervals.
 
+= How can I translate Cookillian to my own language? =
+
+A generated .PO (.POT) file called `default.po` is included in the plugin's resources directory, generally `wp-content/plugins/cookillian/resources/l10n`. It can be translated using tools such as POEdit or manually in a text editor. Simply save the translated .PO and generated .MO file using the locale code (ie., `nl_NL.mo`) within the same directory, and Cookillian will automatically use it if the WordPress language is set to that locale.
+
+If you wish to share the translations with other users of Cookillian, feel free to e-mail the translation to hello@myatus.com and I'll be happy to include it with the next release, along with a credit by-line for your hard work.

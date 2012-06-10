@@ -1,0 +1,530 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Cookillian 1.1.12\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-06-10 19:18+0100\n"
+"PO-Revision-Date: 2012-06-10 19:18+0100\n"
+"Last-Translator: Mike Green <myatus@gmail.com>\n"
+"Language-Team: Myatu's <hello@myatus.com>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop;__\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-Language: English\n"
+"X-Poedit-SearchPath-0: ../../.\n"
+
+#: ../.././vendor/pf4wp/lib/Pf4wp/WordpressPlugin.php:1005
+msgid "Configure this plugin"
+msgstr ""
+
+#: ../.././vendor/pf4wp/lib/Pf4wp/WordpressPlugin.php:1006
+msgid "Settings"
+msgstr ""
+
+#: ../.././vendor/pf4wp/lib/Pf4wp/WordpressPlugin.php:1083
+msgid "Malformed AJAX Request"
+msgstr ""
+
+#: ../.././vendor/pf4wp/lib/Pf4wp/WordpressPlugin.php:1165
+msgid "Oops! Something went wrong"
+msgstr ""
+
+#: ../.././vendor/pf4wp/lib/Pf4wp/WordpressPlugin.php:1177
+#, php-format
+msgid "at %s%s%s()"
+msgstr ""
+
+#: ../.././vendor/pf4wp/lib/Pf4wp/WordpressPlugin.php:1185
+#, php-format
+msgid " in <code>%s</code> line %s"
+msgstr ""
+
+#: ../.././vendor/pf4wp/lib/Pf4wp/Widgets/TitledWidget.php:70
+msgid "New title"
+msgstr ""
+
+#: ../.././vendor/pf4wp/lib/Pf4wp/Widgets/TitledWidget.php:73
+msgid "Title:"
+msgstr ""
+
+#: ../.././vendor/pf4wp/lib/Pf4wp/Menu/MenuEntry.php:330
+msgid "You do not have sufficient permissions to access this page."
+msgstr ""
+
+#: ../.././vendor/pf4wp/lib/Pf4wp/Menu/CombinedMenu.php:50
+msgid "Home"
+msgstr ""
+
+#: ../.././vendor/pf4wp/lib/Pf4wp/Menu/StandardMenu.php:378
+msgid "Overview"
+msgstr ""
+
+#: ../.././vendor/pf4wp/lib/Pf4wp/Menu/StandardMenu.php:427
+msgid "items per page"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1261
+msgid "Add new group"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1262
+msgid "Select a group"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1263
+msgid "Are you sure?"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1569
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1573
+msgid "Cookies"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1581
+msgid "Statistics"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1596
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1775
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1844
+msgid "You do not have permission to do that [nonce]."
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1655
+#, php-format
+msgid "The file <strong>%s</strong> could not be saved. %s"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1677
+msgid "Settings have been saved"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1682
+msgid "<strong>Warning!</strong> No CloudFlare Geolocation data detected."
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1686
+msgid "<strong>Warning!</strong> MaxMind Apache Module or Nginx GeoIP Module not detected"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1690
+msgid ", and no IPv4 database specified. No IPv4 geolocation can be performed!"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1692
+msgid ", and IPv4 database could not be accessed. No IPv4 geolocation can be performed!"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1696
+msgid ", and no IPv6 database specified. No IPv6 geolocation can be performed!"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1698
+msgid ", and IPv6 database could not be accessed. No IPv4 geolocation can be performed!"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1716
+msgid "geoPlugin"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1718
+msgid "This service is provided free of charge by <a href=\"http://www.geoplugin.com/\" target=\"_blank\" title=\"geoPlugin for IP geolocation\">geoPlugin</a>"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1721
+msgid "CloudFlare"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1723
+msgid "If you use <a href=\"http://www.cloudflare.com/\" target=\"_blank\" title=\"CloudFlare\">CloudFlare</a>, this will provide you with free and <u>fast</u> access to IP geolocation"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1726
+msgid "MaxMind"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1728
+msgid "Use a local <a href=\"http://www.maxmind.com/\" target=\"_blank\" title=\"MaxMind\">MaxMind</a> database or Apache module/NginX GeoIP module"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Main.php:1809
+msgid "Cookies have been saved"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Dashboard/Main.php:100
+msgid "Show maximum of"
+msgstr ""
+
+#: ../.././app/Myatu/WordPress/Cookillian/Dashboard/Main.php:100
+msgid "top statistics."
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:12
+msgid "Geolocation"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:17
+msgid "Geolocation Service"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:37
+msgid "Countries"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:40
+msgid "Only visitors from the following selected countries will have their cookies filtered, unless they have already opted in:"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:56
+msgid "Undetermined Countries"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:61
+msgid "Show the alert if the visitor's country could not be determined"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:62
+msgid "Recommended"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:70
+msgid "MaxMind Settings"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:75
+msgid "IPv4 Country Database"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:79
+#: ../.././resources/views/settings.html.twig:100
+msgid "File Location:"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:85
+#: ../.././resources/views/settings.html.twig:106
+msgid "or <em>replace</em> the existing database:"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:87
+#: ../.././resources/views/settings.html.twig:108
+msgid "or upload a new database:"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:96
+msgid "IPv6 Country Database"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:118
+msgid "Alert Settings"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:123
+msgid "Display Alert"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:128
+msgid "Automatic"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:132
+msgid "Manually"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:134
+msgid "See <strong>Help</strong> how to display the alert."
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:140
+msgid "Implied Consent"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:145
+msgid "If the visitor ignores the displayed alert, imply the visitor has opted in"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:152
+msgid "Alert Content"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:157
+#: ../.././resources/views/settings.html.twig:174
+msgid "Default"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:161
+#: ../.././resources/views/settings.html.twig:178
+msgid "Custom"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:169
+msgid "Alert Styling"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:185
+msgid "Custom Alert Style"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:188
+msgid "Use <abbr title=\"Cascading Style Sheet\">CSS</abbr> to style your alert:"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:197
+msgid "Content"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:202
+msgid "Alert Heading"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:213
+msgid "Alert Text"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:224
+msgid "Opt-In Button"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:235
+msgid "Opt-Out Button"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:250
+msgid "Custom Alert Code"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:253
+msgid "Use <abbr title=\"Hypertext Markup Language\">HTML</abbr> to create your own custom alert:"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:266
+msgid "\"Required\" Cookie Text"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:272
+msgid "This text is used to indicate required cookies when using the <code>[cookillian cookies]</code> shortcode"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:278
+msgid "JavaScript"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:284
+msgid "The following JavaScript will <em>only</em> be loaded in the page header and/or footer when cookies are permitted. This could be used for scripts that set 3rd party cookies, such as Google Analytics. See <strong>Help</strong> for complex JavaScript use."
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:289
+msgid "Header"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:300
+msgid "Footer"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:311
+msgid "JavaScript Tags"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:316
+msgid "Automatically wrap header and footer in <code>&lt;script&gt;</code> and <code>&lt;/script&gt;</code> tags"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:323
+msgid "Advanced Options"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:328
+msgid "Auto-add Cookies"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:333
+msgid "Automatically add new/unknown cookies to the <em>Cookies</em> list."
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:337
+msgid "Detect at most"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:339
+msgid "new cookies"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:346
+msgid "Root Cookies"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:351
+msgid "Delete root cookies in addition to local cookies"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:358
+msgid "Delete cookies"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:363
+msgid "Before, or "
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:367
+msgid "After"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:369
+msgid " opt out"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:375
+msgid "PHP Sessions"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:380
+msgid "Do not destroy cookie-based PHP sessions"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:381
+msgid "Required by some plugins, such as WP e-Commerce"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:389
+msgid "Non-JavaScript Support"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:394
+msgid "Provide a dynamic <code>&lt;noscript&gt;</code> section containing the alert for non-JavaScript browsers"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:396
+msgid "Recommended, except when using caching plugins"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:403
+msgid "Geolocation Cache"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:407
+msgid "Keep geolocation lookups in cache for up to"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:409
+msgid "minutes."
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:417
+msgid "Geolocation Backup Service"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:422
+msgid "Use a backup geoloaction service, provided by <a href=\"http://freegeoip.net/\" target=\"_blank\">freegeoip.net</a>, if the default geolocation service has failed."
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:429
+msgid "Asynchronous AJAX"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:434
+msgid "Initialize using asynchronous AJAX"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:436
+msgid "Increases speed, but requires JavaScript variables to be accessed via events"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:442
+msgid "Debug Mode"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:447
+msgid "Enable debug mode"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:449
+msgid "An alert will always be shown to any logged-in user, and debug details can be seen using the JavaScript console"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:463
+msgid "Debug"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:464
+msgid "Rate It"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:465
+msgid "Forum"
+msgstr ""
+
+#: ../.././resources/views/settings.html.twig:466
+msgid "Donate"
+msgstr ""
+
+#: ../.././resources/views/cookies.html.twig:25
+msgid "Cookie Name"
+msgstr ""
+
+#: ../.././resources/views/cookies.html.twig:26
+msgid "Description"
+msgstr ""
+
+#: ../.././resources/views/cookies.html.twig:27
+msgid "Group"
+msgstr ""
+
+#: ../.././resources/views/cookies.html.twig:28
+msgid "Required"
+msgstr ""
+
+#: ../.././resources/views/cookies.html.twig:29
+#: ../.././resources/views/cookies.html.twig:66
+#: ../.././resources/views/cookies.html.twig:93
+msgid "Remove"
+msgstr ""
+
+#: ../.././resources/views/cookies.html.twig:104
+msgid "Cancel Changes"
+msgstr ""
+
+#: ../.././resources/views/dashboard_main.html.twig:9
+msgid "New Cookies"
+msgstr ""
+
+#: ../.././resources/views/dashboard_main.html.twig:12
+msgid "The following new cookie(s) were detected:"
+msgstr ""
+
+#: ../.././resources/views/dashboard_main.html.twig:17
+msgid "Edit"
+msgstr ""
+
+#: ../.././resources/views/dashboard_main.html.twig:22
+msgid "No new cookies detected"
+msgstr ""
+
+#: ../.././resources/views/dashboard_main.html.twig:27
+msgid "Top "
+msgstr ""
+
+#: ../.././resources/views/dashboard_main.html.twig:33
+msgid "Country"
+msgstr ""
+
+#: ../.././resources/views/dashboard_main.html.twig:63
+msgid "See more"
+msgstr ""
+
+#: ../.././resources/views/dashboard_main.html.twig:65
+msgid "No statistics reported yet. Not to worry, they'll come soon."
+msgstr ""
+
+#: ../.././resources/views/stats.html.twig:33
+msgid "Results for"
+msgstr ""
+
+#: ../.././resources/views/stats.html.twig:91
+msgid "Total:"
+msgstr ""
+
+#: ../.././resources/views/stats.html.twig:100
+msgid "Note: The statistics do not include visitors using the \"Do Not Track\" browser option, as they cannot be reliably tracked."
+msgstr ""
+
