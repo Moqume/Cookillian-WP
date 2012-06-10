@@ -537,12 +537,14 @@ class Main extends \Pf4wp\WordpressPlugin
                         'desc'     => 'PHP Session',
                         'group'    => 'PHP',
                         'required' => $this->options->php_sessions_required,
+                        'ua'       => $_SERVER['HTTP_USER_AGENT'],
                     );
                 } else {
                     // It's something else
                     $new_cookies[$cookie_name] = array(
                         'desc'  => '',
                         'group' => static::UNKNOWN,
+                        'ua'    => $_SERVER['HTTP_USER_AGENT'],
                     );
                 }
             }
@@ -1784,6 +1786,7 @@ class Main extends \Pf4wp\WordpressPlugin
             'submit_button'      => get_submit_button(null, 'primary', 'submit', false),
             'known_cookies'      => $known_cookies,
             'known_cookie_count' => count($known_cookies),
+            'debug_mode'         => $this->options->debug_mode,
             'groups'             => $groups,
             'is_rtl'             => is_rtl(),
             'action_url'         => add_query_arg(array()),

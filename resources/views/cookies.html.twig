@@ -42,6 +42,9 @@
                                     </td>
                                     <td class="col_desc">
                                         <textarea name="known_cookies[{{ cookie_name }}][desc]">{{ cookie_value.desc }}</textarea>
+                                        {% if debug_mode %}
+                                        <span class="description">{{ cookie_value.ua }}</span>
+                                        {% endif %}
                                     </td>
                                     <td class="col_group">
                                         <div class="hide-if-no-js group-dropdown">

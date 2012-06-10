@@ -4,7 +4,7 @@ Donate link: http://pledgie.com/campaigns/16906
 Tags: cookie, ec, europe, uk, cookie law, directive, eu cookie directive, filter, block,
 Requires at least: 3.3
 Tested up to: 3.4
-Stable tag: 1.1.7
+Stable tag: 1.1.7-dev9
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -68,6 +68,10 @@ with PHP versions older than 5.3.
 2. Statistics to track compliance impact
 
 == Changelog ==
+
+= 1.1.9 =
+* Fixed: Issue where wp_print_script action was called more than once, causing Ajax code to override objects (Pf4wp)
+* Fixed: Minor bug in statistics, where the most recent entry could not be collapsed
 
 = 1.1.7 (June 2 2012) =
 * __Added:__ The option for asynchronous AJAX initialization
