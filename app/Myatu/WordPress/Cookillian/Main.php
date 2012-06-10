@@ -109,7 +109,16 @@ class Main extends \Pf4wp\WordpressPlugin
 
                         if (!empty($line) && $line[0] !== '#') {
                             list($country, $code) = explode(';', $line, 2);
-                            $this->np_cache['countries'][$code] = array('country' => mb_convert_case($country, MB_CASE_TITLE));
+
+                            // Convert from all upper-case to something easier on the eyes
+                            if (is_callable('mb_convert_case')) {
+                                // Prefer the use of mb_convert_case
+                                $country = mb_convert_case($country, MB_CASE_TITLE);
+                            } else {
+                                $country = ucwords(strtolower($country));
+                            }
+
+                            $this->np_cache['countries'][$code] = array('country' => $country);
                         }
                     }
                 }
