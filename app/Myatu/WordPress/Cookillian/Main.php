@@ -359,10 +359,10 @@ class Main extends \Pf4wp\WordpressPlugin
     /**
      * Cookie handler
      *
-     * @param string $referer Referer of the current page (AJAX, @since 1.0.23)
+     * @param string $referrer Referrer of the current page (AJAX, @since 1.0.23)
      * @return bool Returns `true` if cookies are blocked
      */
-    public function handleCookies($referer = null)
+    public function handleCookies($referrer = null)
     {
         // We detect unknown cookies first
         $this->detectUnknownCookies();
@@ -378,7 +378,7 @@ class Main extends \Pf4wp\WordpressPlugin
         // If the user has not specifically opted out...
         if (!$this->optedOut()) {
             // Find out if the visitor has implied consent, and if so, add a statistic, set a cookie and return
-            if ($this->isImpliedConsent($referer)) {
+            if ($this->isImpliedConsent($referrer)) {
                 $this->addStat('optin');
 
                 $cookie_path = trailingslashit(parse_url(get_home_url(), PHP_URL_PATH));
@@ -414,7 +414,6 @@ class Main extends \Pf4wp\WordpressPlugin
             if (!$this->options->php_sessions_required && session_id()) {
                 // If sessions aren't required and there's one open, destroy it
                 $_SESSION = array();
-
                 $params = session_get_cookie_params();
                 setcookie(session_name(), '', time() - 3600,
                     $params["path"],   $params["domain"],
@@ -698,7 +697,7 @@ class Main extends \Pf4wp\WordpressPlugin
      * Checks if the visitor has seen the alert before, and implied consent
      *
      * @since 1.0.23
-     * @param string $referer Optional referer (AJAX)
+     * @param string $referrer Optional referrer (AJAX)
      * @return bool Returns true if the visitor implied consent
      */
     protected function isImpliedConsent($referrer = null)
@@ -713,7 +712,7 @@ class Main extends \Pf4wp\WordpressPlugin
         if (isset($_SERVER['HTTP_X_MOZ']) && $_SERVER['HTTP_X_MOZ'] == 'prefetch')
             return false;
 
-        // No referer provided, grab it
+        // No referrer provided, grab it
         if (is_null($referrer)) {
             if (isset($_SERVER['HTTP_REFERER']))
                 $referrer = $_SERVER['HTTP_REFERER'];
@@ -1205,8 +1204,10 @@ class Main extends \Pf4wp\WordpressPlugin
     public function onRegisterActions()
     {
         // Do not bother with this if we're processing an AJAX call
-        if (Helpers::doingAjax())
+        if (Helpers::doingAjax()) {
+            $this->handleCookies();
             return;
+        }
 
         // Was there a response to the cookie alert?
         if (isset($_REQUEST[$this->short_name . static::RESP_ID]))
@@ -1357,6 +1358,8 @@ class Main extends \Pf4wp\WordpressPlugin
                 break;
 
             case 'displayed' :
+                $this->handleCookies(false); // Ensure this call doesn't create cookies
+
                 // Lets the plugin know that an alert was displayed
                 $this->addStat('displayed');
 
@@ -1371,6 +1374,8 @@ class Main extends \Pf4wp\WordpressPlugin
                 break;
 
             case 'opt_out' :
+                $this->handleCookies(false); // Ensure this call doesn't create cookies
+
                 // Perform an opt out
                 $this->processResponse(0, false);
 
