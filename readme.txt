@@ -14,7 +14,7 @@ Provides extensible support for EU/UK compliance of the EC Cookie Directive (200
 
 _Cookillian_ makes it easier to comply with the EC Cookie Directive (EU Cookie Law), which affects the United Kingdom on May 25th 2012 and other European countries.
 
-Cookillian will automatically detect if a visitor is located in one of the countries defined by you - likely the countries affected by the EC Cookie Direcitve - and will automatically disable any cookies that are set from within WordPress or a 3rd party plugin. The user will then be presented with an fully customizable alert about cookies, and given the option to opt in or out of using cookies.
+Cookillian will automatically detect if a visitor is located in one of the countries defined by you - likely the countries affected by the EC Cookie Direcitve - and will optionally disable any cookies that are set from within WordPress or a 3rd party plugin. The user will then be presented with an fully customizable alert about cookies, and given the option to opt in or out of using cookies.
 
 It will also collect basic information about any cookies set from within WordPress or 3rd party plugins, allowing you to add a description and whether the cookie is required for the website to operate. If the cookie is required, Cookillian will allow it to be set regardless if the visitor has opted in or out. Using a shortcode, a full description of the cookies used by the website can be presented to the visitor to assist with compliance and/or privacy notices.
 
@@ -24,10 +24,12 @@ With the included statistics, you can see how many visitors have decided to opt 
 
 = Features =
 
-* Selective cookie filtering and alerts based on the visitor's originating country
+* Selective alerts based on the visitor's originating country
+* Support for both "Explicit" and "Implied" consent
+* Attempts to remove cookies either before or after a visitor has opted out (selectable)
+* Optional JavaScript loading if cookies are permitted
 * Automatic alerts, or manually displayed using a WordPress filter, API or shortcode
 * Fully customizable alert text and styling
-* Optional JavaScript loading if cookies are permitted
 * Support for Cookie-based PHP Sessions
 * Define cookies that are required for the operation of the website
 * Automatic collection of cookies used by the website
@@ -41,7 +43,6 @@ With the included statistics, you can see how many visitors have decided to opt 
 * Debug mode for web development and testing
 * Supports caching plugins, such as WP Super Cache
 * Support for the DNT/Do Not Track browser headers (http://donottrack.us)
-* Support for "Implied Consent"
 * Dashboard widget for quick overview of the statistics, and if new cookies have been detected
 
 Visit the [official website](http://myatus.com/projects/cookillian/) for more details.
@@ -68,6 +69,10 @@ with PHP versions older than 5.3.
 2. Statistics to track compliance impact
 
 == Changelog ==
+
+= 1.1.15 =
+* Changed: Additional web-crawler checks
+* Changed: Added AJAX handlers to default alert opt-in and out buttons, where supported
 
 = 1.1.13 (June 10 2012) =
 * __Added:__ Option to limit the amount of new cookies Cookillian will detect (30 by default)

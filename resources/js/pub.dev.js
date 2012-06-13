@@ -138,6 +138,21 @@ if (typeof cookillian === "undefined") {
                e.preventDefault();
             });
 
+            // Bind a click event to the "ok" and "no" buttons, to allow AJAX functionality
+            $('.btn-ok', cookillian_alert).click(function(e) {
+                cookillian.optIn();
+
+                cookillian_alert.fadeOut('slow');
+                e.preventDefault();
+            });
+
+            $('.btn-no', cookillian_alert).click(function(e) {
+                cookillian.optOut();
+
+                cookillian_alert.fadeOut('slow');
+                e.preventDefault();
+            });
+
             // Show the alert if needed
             if (do_show) {
                 if (!cookillian.is_manual) {

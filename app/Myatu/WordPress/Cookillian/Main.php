@@ -32,7 +32,7 @@ class Main extends \Pf4wp\WordpressPlugin
         'B-l-i-t-z-B-O-T','Baiduspider','btbot','Charlotte','Exabot','FAST-WebCrawler','FurlBot',
         'FyberSpider','GalaxyBot','genieBot','GurujiBot','holmes','LapozzBot','LexxeBot','MojeekBot',
         'NetResearchServer','NG-Search','nuSearch','PostBot','Scrubby','Seekbot','ShopWiki',
-        'Speedy Spider','StackRambler','yacybot'
+        'Speedy Spider','StackRambler', 'Sogou', 'WocBot', 'yacybot'
     );
 
     // Country code -> Continent match up
@@ -364,6 +364,10 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     public function handleCookies($referrer = null)
     {
+        // Don't do anything if it's a crawler - @since 1.1.14
+        if ($this->isCrawler())
+            return false;
+
         // We detect unknown cookies first
         $this->detectUnknownCookies();
 
@@ -796,6 +800,17 @@ class Main extends \Pf4wp\WordpressPlugin
     }
 
     /**
+     * Returns whether the user agent is a known crawler
+     *
+     * @return bool
+     */
+    protected function isCrawler()
+    {
+        return (isset($_SERVER['HTTP_USER_AGENT']) && preg_match('#' . implode('|', $this->crawlers) . '#i', $_SERVER['HTTP_USER_AGENT']));
+    }
+
+
+    /**
      * Adds a statistic about the responses (or lack thereof)
      *
      * This saves the details in the 'stats' array, where the first key is the year,
@@ -807,11 +822,8 @@ class Main extends \Pf4wp\WordpressPlugin
      */
     protected function addStat($type)
     {
-        if ($this->options->debug_mode && is_user_logged_in())
-            return; // Don't track if in debug mode and user is logged in
-
-        // First figure out if we're dealing with a crawler/spider
-        if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match('#' . implode('|', $this->crawlers) . '#i', $_SERVER['HTTP_USER_AGENT']))
+        // Don't track if in debug mode and user is logged in or it's a crawler
+        if (($this->options->debug_mode && is_user_logged_in()) || $this->isCrawler())
             return;
 
         $remote_country = $this->getCountryCode($this->getRemoteIP());
@@ -1358,7 +1370,7 @@ class Main extends \Pf4wp\WordpressPlugin
                 break;
 
             case 'displayed' :
-                $this->handleCookies(false); // Ensure this call doesn't create cookies
+                $this->handleCookies(false, false); // Ensure this call doesn't create cookies
 
                 // Lets the plugin know that an alert was displayed
                 $this->addStat('displayed');
@@ -1374,10 +1386,11 @@ class Main extends \Pf4wp\WordpressPlugin
                 break;
 
             case 'opt_out' :
-                $this->handleCookies(false); // Ensure this call doesn't create cookies
-
                 // Perform an opt out
                 $this->processResponse(0, false);
+
+                // Scrub cookies now
+                $this->handleCookies(false, false);
 
                 $this->ajaxResponse(true);
                 break;
