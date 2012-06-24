@@ -915,12 +915,16 @@ if (typeof cookillian === "undefined") {
             // Provide some defaults
             $.extend(this, {
                 "blocked_cookies" : true,
+                "deleted_cookies" : true,
                 "implied_consent" : false,
                 "opted_out"       : false,
                 "opted_in"        : false,
                 "is_manual"       : false,
                 "has_nst"         : false
             });
+
+            // Initialize scrubber
+            cookillian.initScrubCookies();
 
             if (!cookillian.use_async_ajax) {
                 // Synchronous AJAX call
@@ -1013,6 +1017,35 @@ if (typeof cookillian === "undefined") {
             }
         },
 
+        /**
+         * Periodically scrubs cookies that may have been set by JavaScript
+         */
+        initScrubCookies: function() {
+            if (!cookillian.scrub_cookies) {
+                return;
+            }
+
+            $(document).on('cookillian_ready', function() {
+                function cookieScrubber() {
+                    // Check if cookies are supposed to be deleted, but some are found
+                    if (cookillian.deleted_cookies && document.cookie) {
+                        // If we haven't "seen" these cookies before, try delete them
+                        if (typeof cookillian.last_seen_cookies === "undefined" ||
+                            cookillian.last_seen_cookies !== document.cookie) {
+                            cookillian.deleteCookies();
+                        }
+
+                        // Anything left is likely to be "required",
+                        // and we save these for the next check
+                        cookillian.last_seen_cookies = document.cookie;
+                    }
+                    setTimeout(cookieScrubber, 500);
+                }
+
+                cookieScrubber();
+            });
+        },
+
         // ----------- API ----------- //
 
         /**
@@ -1092,8 +1125,4 @@ if (typeof cookillian === "undefined") {
         // Perform post initialization if we're not using asynchronous AJAX
         cookillian.postInit();
     }
-
-    $(document).ready(function(){
-        console.log('Ready!');
-    });
 }(jQuery));

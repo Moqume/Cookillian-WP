@@ -1432,8 +1432,12 @@ class Main extends \Pf4wp\WordpressPlugin
         wp_enqueue_script($this->getName() . '-pub', $js_url . 'pub' . $debug . '.js', array('jquery'), $version);
 
         // Output JS variables that can remain static with caching
-        $extra_js_vars = sprintf('var cookillian = {"use_async_ajax":%s};', ($this->options->async_ajax) ? 'true' : 'false');
-        echo $this->jsBlock($extra_js_vars);
+        $extra_js_vars = array(
+            'use_async_ajax' => $this->options->async_ajax,
+            'scrub_cookies'  => $this->options->scrub_cookies,
+        );
+
+        echo $this->jsBlock(sprintf('var cookillian = %s;', json_encode((Object)$extra_js_vars)));
     }
 
     /**
@@ -1660,6 +1664,7 @@ class Main extends \Pf4wp\WordpressPlugin
                 'geo_backup_service'    => 'bool',
                 'async_ajax'            => 'bool',
                 'max_new_cookies'       => 'int',
+                'scrub_cookies'         => 'bool',
             ));
 
             // Extra sanity check for geo_cache_time, one minute is absolute minimum
@@ -1773,7 +1778,7 @@ class Main extends \Pf4wp\WordpressPlugin
             'alert_custom_content', 'required_text', 'script_header', 'script_footer', 'debug_mode',
             'js_wrap', 'show_on_unknown_location', 'maxmind_db', 'maxmind_db_v6', 'implied_consent',
             'noscript_tag', 'alert_style', 'alert_custom_style', 'delete_cookies', 'geo_cache_time',
-            'geo_backup_service', 'async_ajax', 'max_new_cookies',
+            'geo_backup_service', 'async_ajax', 'max_new_cookies', 'scrub_cookies'
         ));
 
         $vars = array_merge(array(

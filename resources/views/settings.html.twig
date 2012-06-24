@@ -372,6 +372,18 @@
 
                 <tr>
                     <th scope="row">
+                        {{ __('Scrub Cookies') }}
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="scrub_cookies" {% if scrub_cookies %}checked="checked"{% endif %} />
+                            {{ __('Periodically attempt to clean cookies set by JavaScript and other sources') }}
+                        </label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th scope="row">
                         {{ __('PHP Sessions') }}
                     </th>
                     <td>
