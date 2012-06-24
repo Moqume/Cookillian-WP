@@ -70,9 +70,11 @@ with PHP versions older than 5.3.
 
 == Changelog ==
 
-= 1.1.15 =
+= 1.1.17 =
+* Fixed: Optional JavaScript was not called when cookies were still permitted ("delete after" option)
 * Changed: Additional web-crawler checks
 * Changed: Added AJAX handlers to default alert opt-in and out buttons, where supported
+* Changed: Implemented Noah Sloan's writeCapture to accept a wider range of legacy Javascript (Google AdSense)
 
 = 1.1.13 (June 10 2012) =
 * __Added:__ Option to limit the amount of new cookies Cookillian will detect (30 by default)

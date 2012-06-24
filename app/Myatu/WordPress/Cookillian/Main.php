@@ -1319,10 +1319,11 @@ class Main extends \Pf4wp\WordpressPlugin
 
                 // Performs handleCookies(), and returns JS data based on the result
                 $cookies_blocked = $this->handleCookies($data['true_referrer']);
+                $deleted_cookies = ($cookies_blocked && ($this->options->delete_cookies == 'before_optout' || $this->optedOut()) && !(is_user_logged_in() && $this->options->debug_mode));
 
                 $vars = array(
                     'blocked_cookies' => $cookies_blocked,
-                    'deleted_cookies' => ($cookies_blocked && ($this->options->delete_cookies == 'before_optout' || $this->optedOut()) && !(is_user_logged_in() && $this->options->debug_mode)),
+                    'deleted_cookies' => $deleted_cookies,
                     'implied_consent' => $this->hasImpliedConsent(),
                     'opted_out'       => $this->optedOut(),
                     'opted_in'        => $this->optedIn(),
@@ -1330,8 +1331,8 @@ class Main extends \Pf4wp\WordpressPlugin
                     'has_nst'         => ($this->options->noscript_tag && $cookies_blocked && !$this->optedOut() && !$this->hasActiveCachingPlugin()), // Used internally, check if "noscript" tag should be present
                 );
 
-                if (!$cookies_blocked) {
-                    // Cookies are not blocked, add some extra JS, if defined (save on extra AJAX calls)
+                if (!$deleted_cookies) {
+                    // Cookies are not deleted, add some extra JS, if defined (save on extra AJAX calls)
                     if ($this->options->script_header) {
                         // Add header scripts
                         $vars['header_script'] = $this->options->script_header;
