@@ -869,7 +869,7 @@ if (typeof cookillian === "undefined") {
                 type     : 'POST',
                 dataType : 'json',
                 url      : cookillian_ajax.url,
-                timeout  : 5000,
+                timeout  : 9000,
                 async    : has_callback,
                 data     : { "action": cookillian_ajax.action, "func": func, "data": data, "_ajax_nonce": cookillian_ajax.nonce },
                 success  : function(ajax_resp) {

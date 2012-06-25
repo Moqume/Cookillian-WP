@@ -436,8 +436,10 @@ class Main extends \Pf4wp\WordpressPlugin
             // Sanitize the cookie name
             $cookie_name = $this->sanitizeCookieName($cookie_name);
 
-            // Skip the opt-out or session cookie
-            if ($cookie_name == $this->short_name . static::OPTOUT_ID || $cookie_name == $session_name)
+            // Skip our own or session cookies
+            if ($cookie_name == $this->short_name . static::OPTOUT_ID ||
+                $cookie_name == $this->short_name . static::OPTIN_ID  ||
+                $cookie_name == $session_name)
                 continue;
 
             // Set the $is_required
@@ -941,8 +943,8 @@ class Main extends \Pf4wp\WordpressPlugin
         switch ($answer) {
             case 2 :
                 // Reset/clear previous opt-in or out
-                setcookie($this->short_name . static::OPTIN_ID, '', time() - 3600, $cookie_path);
-                setcookie($this->short_name . static::OPTOUT_ID, '', time() - 3600, $cookie_path);
+                Cookies::delete($this->short_name . static::OPTIN_ID);
+                Cookies::delete($this->short_name . static::OPTOUT_ID);
                 break;
 
             case 1 :
@@ -966,7 +968,7 @@ class Main extends \Pf4wp\WordpressPlugin
 
         if (!empty($opt_in_or_out)) {
             // Set a cookie with the visitor's response
-            Cookies::set($opt_in_or_out, 1, strtotime(static::COOKIE_LIFE), true, false, $cookie_path);
+            Cookies::set($opt_in_or_out, 1, strtotime(static::COOKIE_LIFE), true);
         }
 
         if ($redirect) {
