@@ -32,7 +32,7 @@ class Main extends \Pf4wp\WordpressPlugin
         'B-l-i-t-z-B-O-T','Baiduspider','btbot','Charlotte','Exabot','FAST-WebCrawler','FurlBot',
         'FyberSpider','GalaxyBot','genieBot','GurujiBot','holmes','LapozzBot','LexxeBot','MojeekBot',
         'NetResearchServer','NG-Search','nuSearch','PostBot','Scrubby','Seekbot','ShopWiki',
-        'Speedy Spider','StackRambler', 'Sogou', 'WocBot', 'yacybot'
+        'Speedy Spider','StackRambler', 'Sogou', 'WocBot', 'yacybot', 'YodaoBot', 'PaperLiBot',
     );
 
     // Country code -> Continent match up
@@ -277,7 +277,8 @@ class Main extends \Pf4wp\WordpressPlugin
             return $country;
 
         // Nothing so far, looks like we'll have to get it from a local database ...
-        include_once $this->getPluginDir() . 'vendor/MaxMind/geoip.inc';
+        if (!function_exists('geoip_country_code_by_addr'))
+            include_once $this->getPluginDir() . 'vendor/MaxMind/geoip.inc';
 
         if (strpos($ip, ':') !== false) {
             // IPv6 lookup
