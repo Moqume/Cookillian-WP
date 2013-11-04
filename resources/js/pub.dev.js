@@ -873,7 +873,7 @@ if (typeof cookillian === "undefined") {
                 async    : has_callback,
                 data     : { "action": cookillian_ajax.action, "func": func, "data": data, "_ajax_nonce": cookillian_ajax.nonce },
                 success  : function(ajax_resp) {
-                    if (ajax_resp.nonce === cookillian_ajax.nonceresponse && ajax_resp.stat === 'ok') {
+                    if (ajax_resp.stat === 'ok') {
                         resp = ajax_resp.data;
 
                         if (has_callback) {
