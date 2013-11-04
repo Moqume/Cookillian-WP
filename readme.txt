@@ -3,8 +3,8 @@ Contributors: Myatu
 Donate link: http://pledgie.com/campaigns/16906
 Tags: cookie, ec, europe, uk, cookie law, directive, eu cookie directive, filter, block,
 Requires at least: 3.3
-Tested up to: 3.4
-Stable tag: 1.1.18
+Tested up to: 3.7.1
+Stable tag: 1.2
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -69,6 +69,11 @@ with PHP versions older than 5.3.
 2. Statistics to track compliance impact
 
 == Changelog ==
+
+= 1.2 (November 4 2013) =
+* Fixed: WordPress 'wordpress_test_cookie' as well as 'wordpress_*' set to a required cookie in all circumstances, to avoid accidental lock-outs
+* Fixed: TLD not always correctly determined, causing a the cookie opt-in/out cookie not to be set
+* Changed: Removed AJAX NONCE check at the public side
 
 = 1.1.18 (June 25 2012) =
 * __Added:__ Option to periodically scrub cookies, to help capture JavaScript cookies
