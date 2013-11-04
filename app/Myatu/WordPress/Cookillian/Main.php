@@ -634,6 +634,15 @@ class Main extends \Pf4wp\WordpressPlugin
         // Peform a simple check on stored known cookies first
         $known_cookies = $this->options->known_cookies;
 
+        // Force WordPress cookies, as this would otherwise cause a lock-out
+        if (!array_key_exists('wordpress_test_cookie', $known_cookies)) {
+            $known_cookies['wordpress_test_cookie'] = array('required' => true);
+        }
+
+        if (!array_key_exists('wordpress_*', $known_cookies)) {
+            $known_cookies['wordpress_*'] = array('required' => true);
+        }
+
         if (!array_key_exists($cookie_name, $known_cookies)) {
             // Simple check found nothing, see if we need to perform a heavier check using wildcards
             foreach ($known_cookies as $known_cookie_name => $known_cookie_value) {
@@ -1141,8 +1150,14 @@ class Main extends \Pf4wp\WordpressPlugin
         if (empty($known_cookies)) {
             $this->options->known_cookies = array(
                 'wordpress_*' => array(
-                    'desc'  => 'This cookie stores WordPress authentication details.',
-                    'group' => 'WordPress',
+                    'desc'     => 'This cookie stores WordPress authentication details.',
+                    'group'    => 'WordPress',
+                    'required' => true,
+                ),
+                'wordpress_test_cookie' => array(
+                    'desc'     => 'This cookie helps WordPress determine if it can store cookies',
+                    'group'    => 'WordPress',
+                    'required' => true,
                 ),
                 'wp-settings-*' => array(
                     'desc'  => 'This cookie helps remember your personal preferences within WordPress.',
